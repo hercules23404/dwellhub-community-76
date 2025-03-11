@@ -12,7 +12,7 @@ export default function HomePage() {
       <div className="pt-20 pb-16 px-4 lg:pr-72 lg:pl-8 max-w-screen-2xl mx-auto">
         <Container maxWidth="full" padding="pt-6">
           <div className="space-y-6">
-            <h1 className="text-3xl font-bold">Welcome to DwellHub</h1>
+            <h1 className="text-3xl font-bold">Welcome to AVA</h1>
             <p className="text-muted-foreground max-w-3xl">
               Your dashboard for property management, community notices, and service requests.
               Check out what's happening in your community today.
