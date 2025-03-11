@@ -14,17 +14,17 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 210 100% 50%;
+    --primary: 255 70% 55%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96%;
+    --secondary: 261 40% 96%;
     --secondary-foreground: 222 47% 11%;
 
     --muted: 210 20% 92%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 265 40% 70%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
@@ -37,7 +37,7 @@
 
     --sidebar-background: 210 30% 98%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary: 255 70% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 20% 95%;
     --sidebar-accent-foreground: 222 47% 11%;
@@ -85,7 +85,28 @@
   }
 
   .hover-scale {
-    @apply hover:scale-[1.02] transition-transform duration-300;
+    @apply hover:scale-[1.03] transition-transform duration-300;
+  }
+  
+  .hover-pop {
+    @apply hover:scale-105 hover:shadow-lg transition-all duration-300;
+  }
+  
+  .gradient-border {
+    @apply border-2 border-transparent bg-origin-border bg-clip-padding;
+    position: relative;
+  }
+  
+  .gradient-border::before {
+    content: "";
+    @apply absolute inset-0 rounded-xl -z-10;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    padding: 2px;
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
   }
 }
 
@@ -129,4 +150,17 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.2);
+}
+
+/* Add some fun gradients for backgrounds */
+.bg-gradient-1 {
+  background: linear-gradient(135deg, rgb(254,100,121, 0.1) 0%, rgb(251,221,186, 0.1) 100%);
+}
+
+.bg-gradient-2 {
+  background: linear-gradient(135deg, rgba(147,39,143,0.05) 0%, rgba(234,172,232,0.05) 60%);
+}
+
+.bg-gradient-3 {
+  background: linear-gradient(135deg, rgba(242,245,139,0.1) 0%, rgba(148,197,20,0.05) 100%);
 }
