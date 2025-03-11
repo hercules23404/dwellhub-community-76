@@ -13,7 +13,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { 
   Bed, 
   Bath, 
-  SquareFeet,
+  Square, 
   MapPin, 
   Heart,
   MessageSquare
@@ -180,7 +180,7 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
               <span>{property.bathrooms} {property.bathrooms === 1 ? "Bath" : "Baths"}</span>
             </div>
             <div className="flex items-center">
-              <SquareFeet className="h-4 w-4 mr-1 text-muted-foreground" />
+              <Square className="h-4 w-4 mr-1 text-muted-foreground" />
               <span>{property.area} sq ft</span>
             </div>
           </div>
