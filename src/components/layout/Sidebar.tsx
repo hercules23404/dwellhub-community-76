@@ -63,8 +63,11 @@ export function Sidebar({ className }: SidebarProps) {
         )}
       >
         <div className="flex flex-col h-full py-6">
-          <div className="px-4 mb-8">
-            <h2 className="font-medium text-lg tracking-tight">DwellHub</h2>
+          <div className="px-4 mb-8 flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">
+              A
+            </div>
+            <h2 className="font-medium text-lg tracking-tight">AVA</h2>
           </div>
 
           <nav className="flex-1 px-2 space-y-1">

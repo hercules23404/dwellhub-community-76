@@ -18,8 +18,13 @@ export default function Index() {
         
         <Container className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <div className="space-y-6 animate-fade-up">
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                A
+              </div>
+            </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Welcome to <span className="text-primary">DwellHub</span>
+              Welcome to <span className="text-primary">AVA</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
               Simplify your property and community management with our elegant, intuitive platform
@@ -55,7 +60,7 @@ export default function Index() {
           <div className="text-center mb-16 space-y-3 animate-fade-up">
             <h2 className="text-3xl md:text-4xl font-bold">Everything You Need</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Discover the key features that make DwellHub the perfect solution for property and community management
+              Discover the key features that make AVA the perfect solution for property and community management
             </p>
           </div>
 
@@ -112,7 +117,7 @@ export default function Index() {
               onClick={() => navigate("/login")}
               className="animate-fade-up"
             >
-              Start Using DwellHub
+              Start Using AVA
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -123,8 +128,11 @@ export default function Index() {
       <footer className="py-12 bg-secondary/30">
         <Container className="px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <h2 className="text-xl font-semibold">DwellHub</h2>
+            <div className="mb-6 md:mb-0 flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">
+                A
+              </div>
+              <h2 className="text-xl font-semibold">AVA</h2>
               <p className="text-muted-foreground">Your community management solution</p>
             </div>
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
@@ -140,7 +148,7 @@ export default function Index() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t text-center text-muted-foreground text-sm">
-            © {new Date().getFullYear()} DwellHub. All rights reserved.
+            © {new Date().getFullYear()} AVA. All rights reserved.
           </div>
         </Container>
       </footer>

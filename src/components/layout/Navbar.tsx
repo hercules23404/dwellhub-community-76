@@ -38,9 +38,12 @@ export function Navbar({ className }: NavbarProps) {
       <div className="flex items-center justify-between">
         <Link 
           to="/home" 
-          className="font-medium text-lg transition-all hover:opacity-80"
+          className="font-medium text-lg transition-all hover:opacity-80 flex items-center gap-2"
         >
-          DwellHub
+          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">
+            A
+          </div>
+          <span>AVA</span>
         </Link>
         
         <div className="flex items-center space-x-6">
