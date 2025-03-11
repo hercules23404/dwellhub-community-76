@@ -78,6 +78,7 @@ export function NoticeList({ className }: NoticeListProps) {
   const [selectedTarget, setSelectedTarget] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [sortOption, setSortOption] = useState<string>("newest");
 
   const filteredNotices = notices.filter(notice => {
     // Filter by target group
@@ -89,6 +90,22 @@ export function NoticeList({ className }: NoticeListProps) {
       notice.content.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchesTarget && matchesSearch;
+  }).sort((a, b) => {
+    // Sort based on the selected option
+    switch (sortOption) {
+      case "oldest":
+        // Assuming newer items have "ago" dates, we sort in reverse
+        return a.id < b.id ? -1 : 1;
+      case "most-interacted":
+        // Sum of comments and likes
+        const interactionA = a.commentsCount + a.likesCount;
+        const interactionB = b.commentsCount + b.likesCount;
+        return interactionB - interactionA;
+      case "newest":
+      default:
+        // Default sorting by newest (assuming higher IDs are newer)
+        return a.id > b.id ? -1 : 1;
+    }
   });
 
   // Get unique target groups
@@ -127,7 +144,7 @@ export function NoticeList({ className }: NoticeListProps) {
           
           <div className={cn(
             "items-center gap-2",
-            showFilters ? "flex" : "hidden sm:flex"
+            showFilters ? "flex flex-col sm:flex-row" : "hidden sm:flex"
           )}>
             <Select 
               value={selectedTarget} 
@@ -143,6 +160,20 @@ export function NoticeList({ className }: NoticeListProps) {
                     {group}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+
+            <Select 
+              value={sortOption} 
+              onValueChange={setSortOption}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest</SelectItem>
+                <SelectItem value="oldest">Oldest</SelectItem>
+                <SelectItem value="most-interacted">Most Interacted</SelectItem>
               </SelectContent>
             </Select>
           </div>
