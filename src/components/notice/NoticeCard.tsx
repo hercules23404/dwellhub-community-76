@@ -31,7 +31,11 @@ export type NoticeTarget =
   | "floor-1" 
   | "floor-2" 
   | "new-tenants" 
-  | "management";
+  | "management"
+  | "All Residents"
+  | "Pool Users"
+  | "Fitness Enthusiasts"
+  | "Garden Enthusiasts";
 
 export interface NoticeData {
   id: string;
