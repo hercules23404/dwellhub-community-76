@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { NoticeCard, NoticeData } from "./NoticeCard";
 import { Button } from "@/components/ui/button";
@@ -10,10 +9,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Plus, Filter } from "lucide-react";
+import { Plus, Filter, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-// Mock data with ISO date strings for better sorting
 const mockNotices: NoticeData[] = [
   {
     id: "1",
@@ -24,7 +23,7 @@ const mockNotices: NoticeData[] = [
       avatar: "/placeholder.svg",
     },
     date: "2 hours ago",
-    createdAt: "2023-06-10T14:30:00Z", // Adding timestamps for sorting
+    createdAt: "2023-06-10T14:30:00Z",
     target: "All Residents",
     commentsCount: 5,
     likesCount: 12,
@@ -112,35 +111,34 @@ export function NoticeList({ className }: NoticeListProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<string>("newest");
 
-  // Helper function to sort by date
   const sortByDate = (a: NoticeData, b: NoticeData): number => {
     if (!a.createdAt || !b.createdAt) return 0;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   };
 
+  const handleCreateNotice = () => {
+    toast.info("Create Notice feature coming soon", {
+      description: "This feature will be available in the next update."
+    });
+  };
+
   const filteredNotices = notices.filter(notice => {
-    // Filter by target group
     const matchesTarget = selectedTarget === "all" || notice.target === selectedTarget;
-    
-    // Filter by search query
     const matchesSearch = 
       notice.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
       notice.content.toLowerCase().includes(searchQuery.toLowerCase());
-    
     return matchesTarget && matchesSearch;
   }).sort((a, b) => {
-    // Always sort by newest first (using createdAt timestamp)
     return sortByDate(a, b);
   });
 
-  // Get unique target groups
   const targetGroups = Array.from(new Set(notices.map(notice => notice.target)));
 
   return (
     <div className={cn("space-y-6", className)}>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold">Community Notices</h2>
-        <Button className="shrink-0">
+        <Button className="shrink-0" onClick={handleCreateNotice}>
           <Plus className="h-4 w-4 mr-2" />
           Create Notice
         </Button>
@@ -154,6 +152,7 @@ export function NoticeList({ className }: NoticeListProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pr-8"
           />
+          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         </div>
         
         <div className="flex items-center gap-2">
@@ -208,7 +207,15 @@ export function NoticeList({ className }: NoticeListProps) {
       {filteredNotices.length > 0 ? (
         <div className="grid grid-cols-1 gap-6">
           {filteredNotices.map((notice) => (
-            <NoticeCard key={notice.id} notice={notice} />
+            <NoticeCard 
+              key={notice.id} 
+              notice={notice} 
+              onReadToggle={(id, read) => {
+                setNotices(prev => 
+                  prev.map(n => n.id === id ? {...n, read} : n)
+                );
+              }}
+            />
           ))}
         </div>
       ) : (

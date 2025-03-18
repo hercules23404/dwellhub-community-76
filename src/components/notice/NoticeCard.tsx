@@ -47,7 +47,7 @@ export interface NoticeData {
     role?: string;
   };
   date: string;
-  createdAt: string;
+  createdAt: string; // Explicitly define createdAt as required
   target?: NoticeTarget;
   category?: NoticeCategory;
   priority?: "low" | "medium" | "high";
