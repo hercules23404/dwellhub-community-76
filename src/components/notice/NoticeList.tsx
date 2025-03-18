@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Mock data
+// Mock data with ISO date strings for better sorting
 const mockNotices: NoticeData[] = [
   {
     id: "1",
@@ -24,6 +24,7 @@ const mockNotices: NoticeData[] = [
       avatar: "/placeholder.svg",
     },
     date: "2 hours ago",
+    createdAt: "2023-06-10T14:30:00Z", // Adding timestamps for sorting
     target: "All Residents",
     commentsCount: 5,
     likesCount: 12,
@@ -37,6 +38,7 @@ const mockNotices: NoticeData[] = [
       avatar: "/placeholder.svg",
     },
     date: "Yesterday",
+    createdAt: "2023-06-09T09:15:00Z",
     target: "Pool Users",
     commentsCount: 8,
     likesCount: 7,
@@ -50,6 +52,7 @@ const mockNotices: NoticeData[] = [
       avatar: "/placeholder.svg",
     },
     date: "2 days ago",
+    createdAt: "2023-06-08T16:45:00Z",
     target: "Fitness Enthusiasts",
     commentsCount: 12,
     likesCount: 24,
@@ -63,9 +66,38 @@ const mockNotices: NoticeData[] = [
       avatar: "/placeholder.svg",
     },
     date: "3 days ago",
+    createdAt: "2023-06-07T11:20:00Z",
     target: "All Residents",
     commentsCount: 3,
     likesCount: 5,
+  },
+  {
+    id: "5",
+    title: "Emergency Water Shutdown Notice",
+    content: "Due to necessary repairs to the main water line, there will be a water shutdown on Friday, June 12th from 10 AM to 2 PM. Please prepare accordingly by storing water for essential needs during this time. We apologize for any inconvenience.",
+    author: {
+      name: "Technical Team",
+      avatar: "/placeholder.svg",
+    },
+    date: "Just now",
+    createdAt: "2023-06-10T16:00:00Z",
+    target: "All Residents",
+    commentsCount: 0,
+    likesCount: 2,
+  },
+  {
+    id: "6",
+    title: "Community Garden Project Launch",
+    content: "We're thrilled to announce the launch of our community garden project! All interested residents are invited to join our initial planning meeting next Monday at 6 PM in the community center. No gardening experience necessary - everyone is welcome!",
+    author: {
+      name: "Gardening Committee",
+      avatar: "/placeholder.svg",
+    },
+    date: "1 hour ago",
+    createdAt: "2023-06-10T15:45:00Z",
+    target: "Garden Enthusiasts",
+    commentsCount: 7,
+    likesCount: 15,
   },
 ];
 
@@ -80,6 +112,12 @@ export function NoticeList({ className }: NoticeListProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<string>("newest");
 
+  // Helper function to sort by date
+  const sortByDate = (a: NoticeData, b: NoticeData): number => {
+    if (!a.createdAt || !b.createdAt) return 0;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  };
+
   const filteredNotices = notices.filter(notice => {
     // Filter by target group
     const matchesTarget = selectedTarget === "all" || notice.target === selectedTarget;
@@ -91,25 +129,12 @@ export function NoticeList({ className }: NoticeListProps) {
     
     return matchesTarget && matchesSearch;
   }).sort((a, b) => {
-    // Sort based on the selected option
-    switch (sortOption) {
-      case "oldest":
-        // Assuming newer items have "ago" dates, we sort in reverse
-        return a.id < b.id ? -1 : 1;
-      case "most-interacted":
-        // Sum of comments and likes
-        const interactionA = a.commentsCount + a.likesCount;
-        const interactionB = b.commentsCount + b.likesCount;
-        return interactionB - interactionA;
-      case "newest":
-      default:
-        // Default sorting by newest (assuming higher IDs are newer)
-        return a.id > b.id ? -1 : 1;
-    }
+    // Always sort by newest first (using createdAt timestamp)
+    return sortByDate(a, b);
   });
 
   // Get unique target groups
-  const targetGroups = ["All Residents", "Pool Users", "Fitness Enthusiasts"];
+  const targetGroups = Array.from(new Set(notices.map(notice => notice.target)));
 
   return (
     <div className={cn("space-y-6", className)}>

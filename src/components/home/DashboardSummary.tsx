@@ -12,21 +12,74 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
 export function DashboardSummary() {
-  // Mock data
+  // Enhanced mock data with timestamps for proper sorting
   const summaryData = {
-    newNotices: 3,
-    upcomingServices: 1,
-    savedProperties: 2,
+    newNotices: 5,
+    upcomingServices: 3,
+    savedProperties: 4,
     recentActivity: [
-      { type: "notice", title: "Community Meeting", time: "2 hours ago" },
-      { type: "property", title: "New apartment listing", time: "Yesterday" },
-      { type: "service", title: "Plumber request completed", time: "3 days ago" },
+      { 
+        type: "notice", 
+        title: "Emergency Water Shutdown", 
+        time: "Just now",
+        timestamp: "2023-06-10T16:00:00Z" 
+      },
+      { 
+        type: "notice", 
+        title: "Community Garden Project", 
+        time: "1 hour ago",
+        timestamp: "2023-06-10T15:45:00Z" 
+      },
+      { 
+        type: "notice", 
+        title: "Community Meeting", 
+        time: "2 hours ago",
+        timestamp: "2023-06-10T14:30:00Z" 
+      },
+      { 
+        type: "property", 
+        title: "New loft listing in Arts District", 
+        time: "Today",
+        timestamp: "2023-06-10T10:15:00Z" 
+      },
+      { 
+        type: "service", 
+        title: "Plumber request completed", 
+        time: "Yesterday",
+        timestamp: "2023-06-09T13:20:00Z" 
+      },
     ],
     upcomingEvents: [
-      { title: "Plumber Visit", date: "Jun 15, 2:00 PM", type: "service" },
-      { title: "Building Maintenance", date: "Jun 18, 9:00 AM", type: "notice" },
+      { 
+        title: "Plumber Visit", 
+        date: "Tomorrow, 2:00 PM", 
+        type: "service",
+        timestamp: "2023-06-11T14:00:00Z" 
+      },
+      { 
+        title: "Community Meeting", 
+        date: "Jun 12, 10:00 AM", 
+        type: "notice",
+        timestamp: "2023-06-12T10:00:00Z" 
+      },
+      { 
+        title: "Building Maintenance", 
+        date: "Jun 15, 9:00 AM", 
+        type: "service",
+        timestamp: "2023-06-15T09:00:00Z" 
+      },
     ],
   };
+
+  // Sort activities by timestamp to show latest first
+  const sortedActivities = [...summaryData.recentActivity].sort((a, b) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+
+  // Sort upcoming events by timestamp to show soonest first
+  const sortedEvents = [...summaryData.upcomingEvents].sort((a, b) => 
+    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -127,7 +180,7 @@ export function DashboardSummary() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {summaryData.recentActivity.map((activity, i) => (
+              {sortedActivities.map((activity, i) => (
                 <div key={i} className="flex items-start space-x-3">
                   <div className="rounded-full bg-primary/10 p-2">
                     {getIcon(activity.type)}
@@ -156,7 +209,7 @@ export function DashboardSummary() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {summaryData.upcomingEvents.map((event, i) => (
+              {sortedEvents.map((event, i) => (
                 <div key={i} className="flex items-start space-x-3">
                   <div className="rounded-full bg-primary/10 p-2">
                     <Calendar className="h-4 w-4" />

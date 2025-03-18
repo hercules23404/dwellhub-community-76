@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +15,13 @@ import {
   Square, 
   MapPin, 
   Heart,
-  MessageSquare
+  MessageSquare,
+  Home,
+  User,
+  Construction
 } from "lucide-react";
+
+export type PropertyStatus = "vacant" | "occupied" | "maintenance";
 
 export interface PropertyData {
   id: string;
@@ -32,6 +36,7 @@ export interface PropertyData {
   type: string;
   listingDate: string;
   features: string[];
+  status?: PropertyStatus;
 }
 
 interface PropertyCardProps {
@@ -64,6 +69,38 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
     e.preventDefault();
     e.stopPropagation();
     setIsFavorite(!isFavorite);
+  };
+
+  // Get status badge color and icon
+  const getStatusBadge = () => {
+    if (!property.status) return null;
+    
+    let icon = null;
+    let color = "";
+    let label = property.status.charAt(0).toUpperCase() + property.status.slice(1);
+    
+    switch (property.status) {
+      case "vacant":
+        icon = <Home className="h-3 w-3 mr-1" />;
+        color = "bg-emerald-500 hover:bg-emerald-500";
+        break;
+      case "occupied":
+        icon = <User className="h-3 w-3 mr-1" />;
+        color = "bg-blue-500 hover:bg-blue-500";
+        break;
+      case "maintenance":
+        icon = <Construction className="h-3 w-3 mr-1" />;
+        color = "bg-amber-500 hover:bg-amber-500";
+        break;
+    }
+    
+    return (
+      <Badge
+        className={`absolute left-2 bottom-2 ${color} text-white flex items-center`}
+      >
+        {icon}{label}
+      </Badge>
+    );
   };
 
   return (
@@ -152,6 +189,9 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
           >
             {property.type}
           </Badge>
+          
+          {/* Property status badge */}
+          {getStatusBadge()}
         </div>
       </CardHeader>
       <CardContent className="p-4">
