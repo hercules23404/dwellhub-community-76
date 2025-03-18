@@ -23,6 +23,7 @@ export interface NoticeData {
     avatar?: string;
   };
   date: string;
+  createdAt: string; // Added this property to fix type errors
   target?: string;
   commentsCount: number;
   likesCount: number;
