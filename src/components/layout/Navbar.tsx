@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@/components/auth/UserButton";
 import { useState, useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, User } from "lucide-react";
 
 interface NavbarProps {
   className?: string;
@@ -37,16 +37,25 @@ export function Navbar({ className }: NavbarProps) {
       )}
     >
       <div className="flex items-center justify-between">
-        <Link 
-          to="/home" 
-          className="font-medium text-lg transition-all hover:opacity-80 flex items-center gap-2 group"
-        >
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
-            A
-          </div>
-          <span>AVA</span>
-          <Sparkles className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link 
+            to="/home" 
+            className="font-medium text-lg transition-all hover:opacity-80 flex items-center gap-2 group"
+          >
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
+              A
+            </div>
+            <span>AVA</span>
+            <Sparkles className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Link>
+          
+          <Button variant="ghost" size="sm" className="flex items-center gap-2" asChild>
+            <Link to="/profile">
+              <User className="h-4 w-4" />
+              <span>My Profile</span>
+            </Link>
+          </Button>
+        </div>
         
         <div className="flex items-center space-x-6">
           <div className="hidden md:flex space-x-1">
