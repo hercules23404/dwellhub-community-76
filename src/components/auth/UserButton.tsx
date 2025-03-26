@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { LogOut, User, Settings, Bell, Building, HelpCircle, Shield } from "lucide-react";
 import { useAdmin } from "@/contexts/AdminContext";
 import { toast } from "sonner";
