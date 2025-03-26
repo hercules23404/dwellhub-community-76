@@ -14,14 +14,22 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAdmin } from "@/contexts/AdminContext";
 
 interface LoginFormProps {
   className?: string;
 }
 
 const testCredentials = {
-  email: "testuser@example.com",
-  password: "password123",
+  user: {
+    email: "testuser@example.com",
+    password: "password123",
+  },
+  admin: {
+    email: "admin@example.com",
+    password: "admin123",
+  }
 };
 
 export function LoginForm({ className }: LoginFormProps) {
@@ -30,22 +38,36 @@ export function LoginForm({ className }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [loginType, setLoginType] = useState<"user" | "admin">("user");
   const navigate = useNavigate();
+  const { login } = useAdmin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // For demo purposes, we're just checking against test credentials
       if (formType === "login") {
-        if (email === testCredentials.email && password === testCredentials.password) {
-          // Simulate network delay
-          await new Promise((resolve) => setTimeout(resolve, 800));
-          toast.success("Successfully logged in!");
-          navigate("/home");
+        if (loginType === "admin") {
+          // Admin login
+          if (email === testCredentials.admin.email && password === testCredentials.admin.password) {
+            await new Promise((resolve) => setTimeout(resolve, 800));
+            toast.success("Admin login successful!");
+            login(true);
+            navigate("/admin/dashboard");
+          } else {
+            toast.error("Invalid admin credentials!");
+          }
         } else {
-          toast.error("Invalid credentials. Try the test credentials!");
+          // User login
+          if (email === testCredentials.user.email && password === testCredentials.user.password) {
+            await new Promise((resolve) => setTimeout(resolve, 800));
+            toast.success("Successfully logged in!");
+            login(false);
+            navigate("/home");
+          } else {
+            toast.error("Invalid credentials. Try the test credentials!");
+          }
         }
       } else {
         // Register - just simulate success
@@ -61,15 +83,20 @@ export function LoginForm({ className }: LoginFormProps) {
   };
 
   const handleDemoLogin = () => {
-    setEmail(testCredentials.email);
-    setPassword(testCredentials.password);
+    if (loginType === "admin") {
+      setEmail(testCredentials.admin.email);
+      setPassword(testCredentials.admin.password);
+    } else {
+      setEmail(testCredentials.user.email);
+      setPassword(testCredentials.user.password);
+    }
   };
 
   return (
     <Card className={cn("w-full max-w-md mx-auto", className)}>
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-semibold">
-          {formType === "login" ? "Sign in to DwellHub" : "Create an account"}
+          {formType === "login" ? "Sign in to AVA" : "Create an account"}
         </CardTitle>
         <CardDescription>
           {formType === "login" 
@@ -77,8 +104,18 @@ export function LoginForm({ className }: LoginFormProps) {
             : "Fill in the information to create an account"}
         </CardDescription>
       </CardHeader>
+      
+      {formType === "login" && (
+        <Tabs defaultValue="user" className="w-full px-6" onValueChange={(value) => setLoginType(value as "user" | "admin")}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="user">User</TabsTrigger>
+            <TabsTrigger value="admin">Admin</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+      
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 mt-4">
           {formType === "register" && (
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
@@ -140,10 +177,14 @@ export function LoginForm({ className }: LoginFormProps) {
             {isLoading ? (
               <span className="flex items-center gap-1">
                 <span className="h-4 w-4 rounded-full border-2 border-white border-opacity-25 border-t-white animate-spin" />
-                {formType === "login" ? "Signing in..." : "Creating account..."}
+                {formType === "login" 
+                  ? (loginType === "admin" ? "Signing in as admin..." : "Signing in...") 
+                  : "Creating account..."}
               </span>
             ) : (
-              <span>{formType === "login" ? "Sign in" : "Create account"}</span>
+              <span>{formType === "login" 
+                ? (loginType === "admin" ? "Sign in as Admin" : "Sign in") 
+                : "Create account"}</span>
             )}
           </Button>
           
@@ -156,7 +197,7 @@ export function LoginForm({ className }: LoginFormProps) {
                 onClick={handleDemoLogin}
                 disabled={isLoading}
               >
-                Use demo account
+                Use demo {loginType === "admin" ? "admin" : "user"} account
               </Button>
             </div>
           )}
