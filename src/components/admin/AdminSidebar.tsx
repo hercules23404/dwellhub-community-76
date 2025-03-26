@@ -1,6 +1,6 @@
 
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { 
@@ -15,7 +15,6 @@ import {
   Shield,
 } from "lucide-react";
 import { useAdmin } from "@/contexts/AdminContext";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface AdminSidebarProps {
@@ -24,10 +23,25 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ className }: AdminSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const currentPath = location.pathname;
   const { logout } = useAdmin();
   const navigate = useNavigate();
+
+  // Handle sidebar hover
+  const handleMouseEnter = () => {
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    // On mobile, don't close when mouse leaves if it was explicitly opened
+    if (window.innerWidth >= 1024) {
+      setIsOpen(false);
+    }
+  };
 
   // Close sidebar on large screens when navigating
   useEffect(() => {
@@ -47,6 +61,20 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       setIsOpen(false);
     }
   }, [location]);
+
+  // Handle click outside to close sidebar
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node) && window.innerWidth < 1024) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -78,9 +106,12 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
       {/* Sidebar */}
       <div
+        ref={sidebarRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className={cn(
-          "fixed inset-y-0 right-0 z-40 w-64 bg-sidebar shadow-lg border-l border-sidebar-border transition-transform-300 transform lg:translate-x-0 h-full",
-          isOpen ? "translate-x-0" : "translate-x-full",
+          "fixed inset-y-0 right-0 z-40 w-64 bg-sidebar shadow-lg border-l border-sidebar-border transition-all duration-300 transform lg:translate-x-[calc(100%-0.5rem)] h-full",
+          (isOpen || isHovering) ? "translate-x-0 lg:translate-x-0" : "translate-x-full",
           className
         )}
       >
@@ -102,7 +133,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
                 key={item.name}
                 to={item.path}
                 className={cn(
-                  "flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all-200 hover:bg-sidebar-accent group",
+                  "flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-sidebar-accent group",
                   currentPath === item.path
                     ? "bg-red-100 text-red-700"
                     : "text-sidebar-foreground hover:text-sidebar-foreground"
@@ -125,6 +156,12 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           </div>
         </div>
       </div>
+
+      {/* Visual indicator for hover zone on desktop */}
+      <div 
+        className="fixed inset-y-0 right-0 w-2 z-30 hidden lg:block cursor-pointer"
+        onMouseEnter={handleMouseEnter}
+      />
 
       {/* Overlay */}
       {isOpen && (

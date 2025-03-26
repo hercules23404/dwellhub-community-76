@@ -54,7 +54,7 @@ export function UserButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="relative h-10 w-10 rounded-full hover-scale">
+        <button className="relative h-10 w-10 rounded-full hover:scale-105 transition-transform">
           <Avatar className={`h-10 w-10 border ${isAdmin ? 'border-red-200' : ''}`}>
             <AvatarImage src="/placeholder.svg" alt="User avatar" />
             <AvatarFallback className={isAdmin ? "bg-red-500/10 text-red-700" : "bg-primary/5"}>
