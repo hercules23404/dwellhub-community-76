@@ -1,9 +1,11 @@
 
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Home, Bell, Building, Wrench, LogOut, Menu, X } from "lucide-react";
+import { useAdmin } from "@/contexts/AdminContext";
+import { toast } from "sonner";
 
 interface SidebarProps {
   className?: string;
@@ -13,6 +15,8 @@ export function Sidebar({ className }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
+  const { logout } = useAdmin();
+  const navigate = useNavigate();
 
   // Close sidebar on large screens when navigating
   useEffect(() => {
@@ -32,6 +36,12 @@ export function Sidebar({ className }: SidebarProps) {
       setIsOpen(false);
     }
   }, [location]);
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    navigate("/login");
+  };
 
   const navigationItems = [
     { name: "Home", path: "/home", icon: Home },
@@ -89,7 +99,11 @@ export function Sidebar({ className }: SidebarProps) {
           </nav>
 
           <div className="px-2 mt-auto">
-            <Button variant="outline" className="w-full justify-start text-sm bg-sidebar-accent/50">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start text-sm bg-sidebar-accent/50"
+              onClick={handleLogout}
+            >
               <LogOut className="mr-3 h-4 w-4" /> Sign Out
             </Button>
           </div>
