@@ -1,10 +1,10 @@
 
 import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Clock, Star } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -28,324 +30,377 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 
-// Define the form schema with zod
-const formSchema = z.object({
-  serviceType: z.string({
-    required_error: "Please select a service type",
-  }),
-  serviceProvider: z.string().optional(),
-  date: z.date({
-    required_error: "Please select a date",
-  }),
-  timeSlot: z.string({
-    required_error: "Please select a time slot",
-  }),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters",
-  }),
-  contactNumber: z.string().min(10, {
-    message: "Please enter a valid contact number",
-  }),
+const serviceSchema = z.object({
+  title: z.string().min(5, "Title must be at least 5 characters").max(100),
+  description: z.string().min(10, "Description must be at least 10 characters").max(500),
+  category: z.string({ required_error: "Please select a category" }),
+  priority: z.string({ required_error: "Please select a priority" }),
+  propertyId: z.string({ required_error: "Please select a property" }),
+  unitNumber: z.string().min(1, "Unit number is required"),
+  scheduledDate: z.date().optional(),
 });
 
-// Mock data for service providers
-const serviceProviders = [
-  {
-    id: "1",
-    name: "John Smith",
-    role: "Plumber",
-    avatar: "/placeholder.svg",
-    rating: 4.8,
-    reviewCount: 124,
-  },
-  {
-    id: "2",
-    name: "Maria Garcia",
-    role: "Electrician",
-    avatar: "/placeholder.svg",
-    rating: 4.9,
-    reviewCount: 87,
-  },
-  {
-    id: "3",
-    name: "Robert Johnson",
-    role: "Carpenter",
-    avatar: "/placeholder.svg",
-    rating: 4.7,
-    reviewCount: 56,
-  },
-  {
-    id: "4",
-    name: "Emily Chen",
-    role: "Plumber",
-    avatar: "/placeholder.svg",
-    rating: 4.5,
-    reviewCount: 42,
-  },
-];
+type ServiceFormValues = z.infer<typeof serviceSchema>;
 
-// Time slots
-const timeSlots = [
-  "08:00 AM - 10:00 AM",
-  "10:00 AM - 12:00 PM",
-  "12:00 PM - 02:00 PM",
-  "02:00 PM - 04:00 PM",
-  "04:00 PM - 06:00 PM",
-];
-
-// Service types
-const serviceTypes = [
-  "Plumbing",
-  "Electrical",
-  "Carpentry",
-  "Cleaning",
-  "Painting",
-  "HVAC",
-  "Appliance Repair",
-  "Locksmith",
+const categories = [
+  { value: "plumbing", label: "Plumbing" },
+  { value: "electrical", label: "Electrical" },
+  { value: "hvac", label: "HVAC" },
+  { value: "appliance", label: "Appliance" },
+  { value: "structural", label: "Structural" },
+  { value: "landscaping", label: "Landscaping" },
+  { value: "pest", label: "Pest Control" },
+  { value: "cleaning", label: "Cleaning" },
+  { value: "security", label: "Security" },
+  { value: "other", label: "Other" },
 ];
 
 export function ServiceRequestForm() {
-  const [selectedServiceType, setSelectedServiceType] = useState<string>("");
+  const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [properties, setProperties] = useState<{ value: string; label: string }[]>([
+    { value: "prop1", label: "Sunset Apartments" },
+    { value: "prop2", label: "Mountain View Condos" },
+    { value: "prop3", label: "Garden Villas" },
+  ]);
   
-  // Initialize the form
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ServiceFormValues>({
+    resolver: zodResolver(serviceSchema),
     defaultValues: {
+      title: "",
       description: "",
-      contactNumber: "",
+      unitNumber: "",
     },
   });
 
-  // Filter service providers based on selected service type
-  const filteredProviders = serviceProviders.filter(
-    (provider) => provider.role.toLowerCase() === selectedServiceType.toLowerCase()
-  );
-
-  // Handle form submission
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+  useEffect(() => {
+    // Fetch properties from Supabase
+    const fetchProperties = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id, name');
+        
+        if (error) throw error;
+        
+        if (data) {
+          const formattedProperties = data.map(property => ({
+            value: property.id,
+            label: property.name,
+          }));
+          setProperties(formattedProperties);
+        }
+      } catch (error) {
+        console.error('Error fetching properties:', error);
+      }
+    };
     
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("Service request submitted successfully!");
+    fetchProperties();
+  }, []);
+
+  const onSubmit = async (values: ServiceFormValues) => {
+    if (!user) {
+      toast.error("You must be logged in to submit a service request");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Generate a unique service ID
+      const serviceId = `SRV-${Date.now().toString().slice(-6)}`;
+      
+      const { error } = await supabase
+        .from('services')
+        .insert({
+          service_id: serviceId,
+          title: values.title,
+          description: values.description,
+          category: values.category,
+          priority: values.priority,
+          property_id: values.propertyId,
+          unit_number: values.unitNumber,
+          scheduled_date: values.scheduledDate?.toISOString(),
+          status: "pending",
+          user_id: user.id,
+        });
+      
+      if (error) throw error;
+      
+      toast.success("Service request submitted successfully", {
+        description: "We'll get back to you shortly",
+      });
+      
       form.reset();
-    }, 1000);
+    } catch (error: any) {
+      console.error('Error submitting service request:', error);
+      toast.error("Failed to submit service request", {
+        description: error.message || "Please try again later",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Request a Service</h2>
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="serviceType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Service Type</FormLabel>
-                <Select 
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    setSelectedServiceType(value);
-                    form.setValue("serviceProvider", "");
-                  }}
-                  value={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a service type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {serviceTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Select the type of service you need assistance with.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {selectedServiceType && filteredProviders.length > 0 && (
-            <div className="space-y-3">
-              <FormLabel>Select a Service Provider</FormLabel>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredProviders.map((provider) => (
-                  <Card 
-                    key={provider.id}
-                    className={cn(
-                      "cursor-pointer hover-scale transition-all",
-                      form.getValues("serviceProvider") === provider.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border"
-                    )}
-                    onClick={() => form.setValue("serviceProvider", provider.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-4">
-                        <Avatar className="h-12 w-12 border">
-                          <AvatarImage src={provider.avatar} alt={provider.name} />
-                          <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h4 className="text-base font-medium">{provider.name}</h4>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant="outline">{provider.role}</Badge>
-                            <div className="flex items-center">
-                              <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                              <span className="text-sm ml-1">{provider.rating}</span>
-                              <span className="text-xs text-muted-foreground ml-1">
-                                ({provider.reviewCount} reviews)
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Service Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>Submit a Service Request</CardTitle>
+        <CardDescription>
+          Fill out the form below to request maintenance or other services for your property.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Service Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="E.g., Bathroom leak, broken window" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Briefly describe the issue
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Select a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date(new Date().setHours(0, 0, 0, 0))
-                        }
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormDescription>
-                    Select a date for the service appointment.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.value} value={category.value}>
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Select the category that best describes your issue
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="timeSlot"
+              name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preferred Time</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a time slot" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {timeSlots.map((slot) => (
-                        <SelectItem key={slot} value={slot}>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                            {slot}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Detailed Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Please provide as much detail as possible about the issue..."
+                      className="min-h-[120px]"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormDescription>
-                    Choose your preferred time slot.
+                    Include relevant details such as when you noticed the issue, its severity, etc.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-          
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description of Issue</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Please describe the issue in detail..."
-                    className="resize-none min-h-[120px]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Provide details about the problem that needs attention.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="contactNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Contact Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your phone number" {...field} />
-                </FormControl>
-                <FormDescription>
-                  The service provider will use this number to contact you.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <Button type="submit" className="w-full sm:w-auto">
-            Submit Service Request
-          </Button>
-        </form>
-      </Form>
-    </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="propertyId"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Property</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value
+                              ? properties.find((property) => property.value === field.value)?.label
+                              : "Select property"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0">
+                        <Command>
+                          <CommandInput placeholder="Search property..." />
+                          <CommandEmpty>No property found.</CommandEmpty>
+                          <CommandGroup>
+                            {properties.map((property) => (
+                              <CommandItem
+                                value={property.label}
+                                key={property.value}
+                                onSelect={() => {
+                                  form.setValue("propertyId", property.value);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    property.value === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {property.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormDescription>
+                      Select the property where the issue is located
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unitNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit/Apartment Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="E.g., Apt 101, Unit B" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Specify your unit number
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low - Not Urgent</SelectItem>
+                        <SelectItem value="medium">Medium - Needs Attention</SelectItem>
+                        <SelectItem value="high">High - Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      How urgent is this issue?
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="scheduledDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Preferred Service Date (Optional)</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date < new Date() || date > new Date(new Date().setMonth(new Date().getMonth() + 1))
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormDescription>
+                      Select a preferred date for service (within the next month)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <CardFooter className="px-0 flex justify-end">
+              <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Submit Service Request"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }

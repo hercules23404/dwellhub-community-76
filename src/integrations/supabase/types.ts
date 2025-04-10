@@ -9,6 +9,171 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      notice_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          notice_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          notice_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          notice_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notice_comments_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "notices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notice_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          notice_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notice_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notice_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notice_likes_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "notices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notices: {
+        Row: {
+          author_avatar: string | null
+          author_id: string | null
+          author_name: string
+          category: string
+          comments_count: number
+          content: string
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          likes_count: number
+          notice_id: string
+          publish_date: string
+          status: string
+          target: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_avatar?: string | null
+          author_id?: string | null
+          author_name: string
+          category?: string
+          comments_count?: number
+          content: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          likes_count?: number
+          notice_id: string
+          publish_date: string
+          status?: string
+          target?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_avatar?: string | null
+          author_id?: string | null
+          author_name?: string
+          category?: string
+          comments_count?: number
+          content?: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          likes_count?: number
+          notice_id?: string
+          publish_date?: string
+          status?: string
+          target?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          due_date: string | null
+          id: string
+          payment_date: string | null
+          payment_id: string
+          property_id: string | null
+          status: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          payment_date?: string | null
+          payment_id: string
+          property_id?: string | null
+          status: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          payment_date?: string | null
+          payment_id?: string
+          property_id?: string | null
+          status?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -38,6 +203,104 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          created_at: string | null
+          featured: boolean
+          id: string
+          name: string
+          property_id: string
+          rent: string
+          status: string
+          type: string
+          units: number
+          updated_at: string | null
+        }
+        Insert: {
+          address: string
+          created_at?: string | null
+          featured?: boolean
+          id?: string
+          name: string
+          property_id: string
+          rent: string
+          status?: string
+          type: string
+          units?: number
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string
+          created_at?: string | null
+          featured?: boolean
+          id?: string
+          name?: string
+          property_id?: string
+          rent?: string
+          status?: string
+          type?: string
+          units?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          priority: string
+          property_id: string | null
+          scheduled_date: string | null
+          service_id: string
+          status: string
+          title: string
+          unit_number: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          priority?: string
+          property_id?: string | null
+          scheduled_date?: string | null
+          service_id: string
+          status?: string
+          title: string
+          unit_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          priority?: string
+          property_id?: string | null
+          scheduled_date?: string | null
+          service_id?: string
+          status?: string
+          title?: string
+          unit_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       User: {
         Row: {

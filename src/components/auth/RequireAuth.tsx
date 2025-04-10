@@ -4,7 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-export function RequireAuth({ children }: { children: JSX.Element }) {
+export function RequireAuth({ children, requireAdmin = false }: { children: JSX.Element, requireAdmin?: boolean }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 

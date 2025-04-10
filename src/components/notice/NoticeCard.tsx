@@ -14,6 +14,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Heart, Clock, Users, Calendar, Bell, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, parseISO, isAfter, isBefore, isToday } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export type NoticeCategory = 
   | "announcement" 
@@ -21,7 +24,8 @@ export type NoticeCategory =
   | "lease" 
   | "payment" 
   | "community" 
-  | "urgent";
+  | "urgent"
+  | string;
 
 export type NoticeTarget = 
   | "all-tenants" 
@@ -35,7 +39,8 @@ export type NoticeTarget =
   | "All Residents"
   | "Pool Users"
   | "Fitness Enthusiasts"
-  | "Garden Enthusiasts";
+  | "Garden Enthusiasts"
+  | string;
 
 export interface NoticeData {
   id: string;
@@ -47,7 +52,7 @@ export interface NoticeData {
     role?: string;
   };
   date: string;
-  createdAt: string; // Explicitly define createdAt as required
+  createdAt: string;
   target?: NoticeTarget;
   category?: NoticeCategory;
   priority?: "low" | "medium" | "high";
@@ -69,14 +74,44 @@ export function NoticeCard({ notice, className, onReadToggle }: NoticeCardProps)
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(notice.likesCount);
   const [isRead, setIsRead] = useState(notice.read || false);
+  const { user } = useAuth();
 
-  const toggleLike = () => {
-    if (isLiked) {
-      setLikesCount(prev => prev - 1);
-    } else {
-      setLikesCount(prev => prev + 1);
+  const toggleLike = async () => {
+    if (!user) {
+      toast.error("Please sign in to like notices");
+      return;
     }
-    setIsLiked(!isLiked);
+
+    try {
+      if (isLiked) {
+        // Unlike the notice
+        await supabase
+          .from('notice_likes')
+          .delete()
+          .match({ notice_id: notice.id, user_id: user.id });
+        
+        setLikesCount(prev => prev - 1);
+      } else {
+        // Like the notice
+        await supabase
+          .from('notice_likes')
+          .insert({ notice_id: notice.id, user_id: user.id });
+        
+        setLikesCount(prev => prev + 1);
+      }
+      
+      setIsLiked(!isLiked);
+      
+      // Update the likes count in the notices table
+      await supabase
+        .from('notices')
+        .update({ likes_count: isLiked ? likesCount - 1 : likesCount + 1 })
+        .eq('id', notice.id);
+        
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast.error("Failed to process your like");
+    }
   };
 
   const toggleRead = () => {
@@ -111,6 +146,28 @@ export function NoticeCard({ notice, className, onReadToggle }: NoticeCardProps)
       default: return <Bell className="h-4 w-4 text-primary" />;
     }
   };
+
+  useEffect(() => {
+    // Check if the current user has liked this notice
+    if (user) {
+      const checkLikeStatus = async () => {
+        try {
+          const { data } = await supabase
+            .from('notice_likes')
+            .select('id')
+            .match({ notice_id: notice.id, user_id: user.id })
+            .single();
+          
+          setIsLiked(!!data);
+        } catch (error) {
+          // If error is 'No rows found', it means user hasn't liked the notice
+          console.log('Like status check:', error);
+        }
+      };
+      
+      checkLikeStatus();
+    }
+  }, [user, notice.id]);
 
   return (
     <Card className={cn(

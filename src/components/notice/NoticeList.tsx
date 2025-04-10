@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { NoticeCard, NoticeData } from "./NoticeCard";
 import { Button } from "@/components/ui/button";
 import { 
@@ -12,114 +13,115 @@ import { Input } from "@/components/ui/input";
 import { Plus, Filter, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-const mockNotices: NoticeData[] = [
-  {
-    id: "1",
-    title: "Community Meeting This Weekend",
-    content: "We will be having our monthly community meeting this Saturday at 10 AM in the common area. Topics to be discussed include the upcoming renovation projects and the annual budget review. All residents are encouraged to attend and participate.",
-    author: {
-      name: "Sarah Johnson",
-      avatar: "/placeholder.svg",
-    },
-    date: "2 hours ago",
-    createdAt: "2023-06-10T14:30:00Z",
-    target: "All Residents",
-    commentsCount: 5,
-    likesCount: 12,
-  },
-  {
-    id: "2",
-    title: "Pool Maintenance Notice",
-    content: "The community pool will be closed for maintenance from June 15th to June 18th. We apologize for any inconvenience this may cause. The maintenance is necessary to ensure the pool remains safe and clean for all residents.",
-    author: {
-      name: "Michael Chen",
-      avatar: "/placeholder.svg",
-    },
-    date: "Yesterday",
-    createdAt: "2023-06-09T09:15:00Z",
-    target: "Pool Users",
-    commentsCount: 8,
-    likesCount: 7,
-  },
-  {
-    id: "3",
-    title: "New Fitness Classes Available",
-    content: "We're excited to announce new fitness classes in our community gym! Starting next week, we will offer yoga on Tuesdays at 6 PM and HIIT workouts on Thursdays at 7 PM. These classes are free for all residents. Please bring your own mat for yoga classes.",
-    author: {
-      name: "Emma Rodriguez",
-      avatar: "/placeholder.svg",
-    },
-    date: "2 days ago",
-    createdAt: "2023-06-08T16:45:00Z",
-    target: "Fitness Enthusiasts",
-    commentsCount: 12,
-    likesCount: 24,
-  },
-  {
-    id: "4",
-    title: "Parking Regulations Reminder",
-    content: "A friendly reminder about our community parking regulations. Please ensure that all vehicles are parked in designated spots. Visitor parking is limited to 24 hours. Any vehicles parked in fire lanes or blocking access will be towed at the owner's expense.",
-    author: {
-      name: "David Wilson",
-      avatar: "/placeholder.svg",
-    },
-    date: "3 days ago",
-    createdAt: "2023-06-07T11:20:00Z",
-    target: "All Residents",
-    commentsCount: 3,
-    likesCount: 5,
-  },
-  {
-    id: "5",
-    title: "Emergency Water Shutdown Notice",
-    content: "Due to necessary repairs to the main water line, there will be a water shutdown on Friday, June 12th from 10 AM to 2 PM. Please prepare accordingly by storing water for essential needs during this time. We apologize for any inconvenience.",
-    author: {
-      name: "Technical Team",
-      avatar: "/placeholder.svg",
-    },
-    date: "Just now",
-    createdAt: "2023-06-10T16:00:00Z",
-    target: "All Residents",
-    commentsCount: 0,
-    likesCount: 2,
-  },
-  {
-    id: "6",
-    title: "Community Garden Project Launch",
-    content: "We're thrilled to announce the launch of our community garden project! All interested residents are invited to join our initial planning meeting next Monday at 6 PM in the community center. No gardening experience necessary - everyone is welcome!",
-    author: {
-      name: "Gardening Committee",
-      avatar: "/placeholder.svg",
-    },
-    date: "1 hour ago",
-    createdAt: "2023-06-10T15:45:00Z",
-    target: "Garden Enthusiasts",
-    commentsCount: 7,
-    likesCount: 15,
-  },
-];
-
-interface NoticeListProps {
-  className?: string;
-}
-
-export function NoticeList({ className }: NoticeListProps) {
-  const [notices, setNotices] = useState<NoticeData[]>(mockNotices);
+export function NoticeList({ className }: { className?: string }) {
+  const [notices, setNotices] = useState<NoticeData[]>([]);
   const [selectedTarget, setSelectedTarget] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<string>("newest");
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    fetchNotices();
+    
+    // Set up realtime subscription for notices
+    const channel = supabase
+      .channel('public:notices')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'notices' 
+      }, (payload) => {
+        console.log('Notices change received!', payload);
+        fetchNotices();
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchNotices = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('notices')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Transform Supabase data to match NoticeData format
+      const transformedData = data.map(notice => ({
+        id: notice.id,
+        title: notice.title,
+        content: notice.content,
+        author: {
+          name: notice.author_name,
+          avatar: notice.author_avatar || "/placeholder.svg",
+        },
+        date: formatDate(notice.created_at),
+        createdAt: notice.created_at,
+        target: notice.target as any,
+        category: notice.category as any,
+        commentsCount: notice.comments_count,
+        likesCount: notice.likes_count,
+      }));
+      
+      setNotices(transformedData);
+    } catch (error: any) {
+      console.error('Error fetching notices:', error);
+      toast.error("Failed to load notices");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+      if (diffHours === 0) {
+        return 'Just now';
+      }
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+  };
+
+  const handleCreateNotice = async () => {
+    if (!user) {
+      toast.error("Please sign in to create a notice");
+      return;
+    }
+
+    // In a real implementation, this would open a form modal
+    toast.info("Create Notice feature coming soon", {
+      description: "This feature will be available in the next update."
+    });
+  };
 
   const sortByDate = (a: NoticeData, b: NoticeData): number => {
     if (!a.createdAt || !b.createdAt) return 0;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  };
-
-  const handleCreateNotice = () => {
-    toast.info("Create Notice feature coming soon", {
-      description: "This feature will be available in the next update."
-    });
   };
 
   const filteredNotices = notices.filter(notice => {
@@ -204,7 +206,11 @@ export function NoticeList({ className }: NoticeListProps) {
         </div>
       </div>
 
-      {filteredNotices.length > 0 ? (
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading notices...</p>
+        </div>
+      ) : filteredNotices.length > 0 ? (
         <div className="grid grid-cols-1 gap-6">
           {filteredNotices.map((notice) => (
             <NoticeCard 
