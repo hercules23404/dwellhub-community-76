@@ -28,6 +28,7 @@ import {
 import { useProperties } from "@/components/property/useProperties";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { PropertyStatus } from "@/components/property/PropertyCard";
 
 export default function PropertyPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -43,7 +44,7 @@ export default function PropertyPage() {
     bathrooms: "1",
     area: "1000",
     type: "Apartment",
-    status: "vacant",
+    status: "vacant" as PropertyStatus,
     features: [""],
     images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800"]
   });
@@ -57,10 +58,18 @@ export default function PropertyPage() {
   };
 
   const handleSelectChange = (field: string, value: string) => {
-    setPropertyData({
-      ...propertyData,
-      [field]: value
-    });
+    if (field === "status") {
+      // Ensure status is cast as PropertyStatus
+      setPropertyData({
+        ...propertyData,
+        [field]: value as PropertyStatus
+      });
+    } else {
+      setPropertyData({
+        ...propertyData,
+        [field]: value
+      });
+    }
   };
 
   const handleSubmit = async () => {
@@ -98,7 +107,7 @@ export default function PropertyPage() {
         bathrooms: "1",
         area: "1000",
         type: "Apartment",
-        status: "vacant",
+        status: "vacant" as PropertyStatus,
         features: [""],
         images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800"]
       });
