@@ -76,6 +76,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     phoneNumber?: string;
   }) => {
     try {
+      // First, check if a user with this email already exists
+      const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
+        email,
+        password: 'dummyPasswordThatWillFail' // This will fail if the email exists or not
+      });
+      
+      // If the response contains a user, it means the email exists (even though the password was wrong)
+      if (existingUser?.user) {
+        toast.error("An account with this email already exists. Please log in instead.");
+        throw new Error("Email already exists");
+      }
+      
+      // If we get here, the email doesn't exist, so proceed with signup
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -90,11 +103,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      if (error) throw error;
-      
-      toast.success("Registration successful! Please check your email to verify your account.");
+      if (error) {
+        // Check for duplicate email error
+        if (error.message.includes("User already registered")) {
+          toast.error("An account with this email already exists. Please log in instead.");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Registration successful! Please check your email to verify your account.");
+      }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred during sign up");
+      if (error.message !== "Email already exists") {
+        toast.error(error.message || "An error occurred during sign up");
+      }
       throw error;
     }
   };

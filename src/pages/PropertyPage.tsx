@@ -97,6 +97,8 @@ export default function PropertyPage() {
         features: ["Furnished", "Parking", "Pet Friendly"]  // Default features for now
       });
 
+      toast.success("Property listed successfully");
+
       // Reset form and close dialog
       setPropertyData({
         title: "",
@@ -114,6 +116,7 @@ export default function PropertyPage() {
       setShowAddDialog(false);
     } catch (error) {
       console.error("Error creating property:", error);
+      toast.error("Failed to list property");
     }
   };
 
@@ -134,7 +137,7 @@ export default function PropertyPage() {
                     List Your Property
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add New Property</DialogTitle>
                     <DialogDescription>
