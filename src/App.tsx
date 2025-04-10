@@ -22,6 +22,7 @@ import AdminPropertiesPage from "./pages/admin/AdminPropertiesPage";
 import AdminTenantsPage from "./pages/admin/AdminTenantsPage";
 import AdminServicesPage from "./pages/admin/AdminServicesPage";
 import AdminNoticesPage from "./pages/admin/AdminNoticesPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
 
 const queryClient = new QueryClient();
 
@@ -72,28 +73,33 @@ const App = () => (
               
               {/* Admin Routes */}
               <Route path="/admin/dashboard" element={
-                <RequireAuth>
+                <RequireAuth requireAdmin={true}>
                   <AdminDashboardPage />
                 </RequireAuth>
               } />
               <Route path="/admin/properties" element={
-                <RequireAuth>
+                <RequireAuth requireAdmin={true}>
                   <AdminPropertiesPage />
                 </RequireAuth>
               } />
               <Route path="/admin/tenants" element={
-                <RequireAuth>
+                <RequireAuth requireAdmin={true}>
                   <AdminTenantsPage />
                 </RequireAuth>
               } />
               <Route path="/admin/services" element={
-                <RequireAuth>
+                <RequireAuth requireAdmin={true}>
                   <AdminServicesPage />
                 </RequireAuth>
               } />
               <Route path="/admin/notices" element={
-                <RequireAuth>
+                <RequireAuth requireAdmin={true}>
                   <AdminNoticesPage />
+                </RequireAuth>
+              } />
+              <Route path="/admin/users" element={
+                <RequireAuth requireAdmin={true}>
+                  <AdminUsersPage />
                 </RequireAuth>
               } />
               

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -46,64 +46,74 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
 
-// Mock property data
-const mockProperties = [
-  {
-    id: "PRO-101",
-    name: "Sunset Apartments",
-    address: "123 Maple Street, Springfield",
-    type: "Apartment",
-    units: 12,
-    rent: "$1200",
-    status: "available",
-    featured: true,
-  },
-  {
-    id: "PRO-102",
-    name: "Mountain View Condos",
-    address: "456 Oak Avenue, Riverdale",
-    type: "Condo",
-    units: 8,
-    rent: "$1500",
-    status: "rented",
-    featured: false,
-  },
-  {
-    id: "PRO-103",
-    name: "Garden Villas",
-    address: "789 Pine Road, Westfield",
-    type: "House",
-    units: 6,
-    rent: "$2200",
-    status: "maintenance",
-    featured: true,
-  },
-  {
-    id: "PRO-104",
-    name: "City Center Lofts",
-    address: "101 Downtown Blvd, Metro City",
-    type: "Loft",
-    units: 10,
-    rent: "$1800",
-    status: "available",
-    featured: false,
-  },
-];
+// Define property interface
+interface Property {
+  id: string;
+  name: string;
+  address: string;
+  type: string;
+  units: number;
+  rent: string;
+  status: string;
+  featured: boolean;
+  bedrooms?: number;
+  bathrooms?: number;
+  size_sqft?: number;
+  description?: string;
+  image_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  owner_id?: string;
+}
 
 export function PropertyManagement() {
-  const [properties, setProperties] = useState(mockProperties);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newProperty, setNewProperty] = useState({
+  const [loading, setLoading] = useState(true);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const [newProperty, setNewProperty] = useState<Omit<Property, 'id'>>({
     name: "",
     address: "",
     type: "Apartment",
     units: 1,
     rent: "",
     status: "available",
-    featured: false
+    featured: false,
+    bedrooms: 2,
+    bathrooms: 1,
+    size_sqft: 1000,
+    description: "",
+    image_url: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800"
   });
+
+  // Fetch properties on component mount
+  useEffect(() => {
+    fetchProperties();
+  }, []);
+
+  const fetchProperties = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*');
+
+      if (error) throw error;
+      
+      setProperties(data || []);
+    } catch (error: any) {
+      console.error('Error fetching properties:', error);
+      toast.error(error.message || "Failed to load properties");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredProperties = properties.filter(property => 
     property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,13 +121,91 @@ export function PropertyManagement() {
     property.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddProperty = () => {
-    const property = {
-      ...newProperty,
-      id: `PRO-${100 + properties.length + 1}`,
-    };
+  const handleAddProperty = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .insert({
+          name: newProperty.name,
+          address: newProperty.address,
+          type: newProperty.type,
+          units: newProperty.units,
+          rent: newProperty.rent,
+          status: newProperty.status,
+          featured: newProperty.featured,
+          bedrooms: newProperty.bedrooms,
+          bathrooms: newProperty.bathrooms,
+          size_sqft: newProperty.size_sqft,
+          description: newProperty.description,
+          image_url: newProperty.image_url
+        })
+        .select();
+      
+      if (error) throw error;
+      
+      fetchProperties();
+      resetPropertyForm();
+      setShowAddDialog(false);
+      toast.success("Property added successfully");
+    } catch (error: any) {
+      console.error('Error adding property:', error);
+      toast.error(error.message || "Failed to add property");
+    }
+  };
+
+  const handleEditProperty = async () => {
+    if (!selectedProperty) return;
     
-    setProperties([...properties, property]);
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .update({
+          name: selectedProperty.name,
+          address: selectedProperty.address,
+          type: selectedProperty.type,
+          units: selectedProperty.units,
+          rent: selectedProperty.rent,
+          status: selectedProperty.status,
+          featured: selectedProperty.featured,
+          bedrooms: selectedProperty.bedrooms,
+          bathrooms: selectedProperty.bathrooms,
+          size_sqft: selectedProperty.size_sqft,
+          description: selectedProperty.description,
+          image_url: selectedProperty.image_url,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedProperty.id);
+      
+      if (error) throw error;
+      
+      fetchProperties();
+      setIsEditing(false);
+      setSelectedProperty(null);
+      toast.success("Property updated successfully");
+    } catch (error: any) {
+      console.error('Error updating property:', error);
+      toast.error(error.message || "Failed to update property");
+    }
+  };
+
+  const handleDeleteProperty = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      fetchProperties();
+      toast.success("Property deleted successfully");
+    } catch (error: any) {
+      console.error('Error deleting property:', error);
+      toast.error(error.message || "Failed to delete property");
+    }
+  };
+
+  const resetPropertyForm = () => {
     setNewProperty({
       name: "",
       address: "",
@@ -125,16 +213,13 @@ export function PropertyManagement() {
       units: 1,
       rent: "",
       status: "available",
-      featured: false
+      featured: false,
+      bedrooms: 2,
+      bathrooms: 1,
+      size_sqft: 1000,
+      description: "",
+      image_url: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800"
     });
-    
-    setShowAddDialog(false);
-    toast.success("Property added successfully");
-  };
-
-  const handleDeleteProperty = (id: string) => {
-    setProperties(properties.filter(property => property.id !== id));
-    toast.success("Property deleted successfully");
   };
 
   const getStatusColor = (status: string) => {
@@ -142,6 +227,7 @@ export function PropertyManagement() {
       case "available":
         return "bg-green-100 text-green-800";
       case "rented":
+      case "occupied":
         return "bg-blue-100 text-blue-800";
       case "maintenance":
         return "bg-amber-100 text-amber-800";
@@ -217,6 +303,16 @@ export function PropertyManagement() {
                     />
                   </div>
                   
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea 
+                      id="description" 
+                      value={newProperty.description}
+                      onChange={(e) => setNewProperty({...newProperty, description: e.target.value})}
+                      placeholder="Enter property description" 
+                    />
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="units">Units</Label>
@@ -235,6 +331,40 @@ export function PropertyManagement() {
                         value={newProperty.rent}
                         onChange={(e) => setNewProperty({...newProperty, rent: e.target.value})}
                         placeholder="$0.00" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="bedrooms">Bedrooms</Label>
+                      <Input 
+                        id="bedrooms" 
+                        type="number"
+                        min="0"
+                        value={newProperty.bedrooms}
+                        onChange={(e) => setNewProperty({...newProperty, bedrooms: parseInt(e.target.value)})}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="bathrooms">Bathrooms</Label>
+                      <Input 
+                        id="bathrooms" 
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={newProperty.bathrooms}
+                        onChange={(e) => setNewProperty({...newProperty, bathrooms: parseInt(e.target.value)})}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="size_sqft">Area (sq ft)</Label>
+                      <Input 
+                        id="size_sqft" 
+                        type="number"
+                        min="1"
+                        value={newProperty.size_sqft}
+                        onChange={(e) => setNewProperty({...newProperty, size_sqft: parseInt(e.target.value)})}
                       />
                     </div>
                   </div>
@@ -271,20 +401,20 @@ export function PropertyManagement() {
                   </div>
                   
                   <div className="grid gap-2">
-                    <Label>Property Images</Label>
-                    <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center text-center">
-                      <Image className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Drag and drop images here or click to browse
-                      </p>
-                      <Button variant="outline" size="sm" className="mt-2">
-                        Upload Images
-                      </Button>
-                    </div>
+                    <Label htmlFor="image_url">Property Image URL</Label>
+                    <Input 
+                      id="image_url" 
+                      value={newProperty.image_url}
+                      onChange={(e) => setNewProperty({...newProperty, image_url: e.target.value})}
+                      placeholder="Enter image URL" 
+                    />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+                  <Button variant="outline" onClick={() => {
+                    resetPropertyForm();
+                    setShowAddDialog(false);
+                  }}>
                     Cancel
                   </Button>
                   <Button onClick={handleAddProperty}>
@@ -321,10 +451,18 @@ export function PropertyManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProperties.length > 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center h-24">
+                        <div className="flex justify-center">
+                          <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredProperties.length > 0 ? (
                     filteredProperties.map((property) => (
                       <TableRow key={property.id}>
-                        <TableCell className="font-medium">{property.id}</TableCell>
+                        <TableCell className="font-medium">{property.id.substring(0, 8)}...</TableCell>
                         <TableCell>
                           {property.name}
                           {property.featured && (
@@ -350,7 +488,10 @@ export function PropertyManagement() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedProperty(property);
+                                setIsEditing(true);
+                              }}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
@@ -378,7 +519,6 @@ export function PropertyManagement() {
           <TabsContent value="available" className="mt-0">
             <div className="rounded-md border">
               <Table>
-                {/* Similar structure as "all" tab but filtered for available properties */}
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
@@ -397,7 +537,7 @@ export function PropertyManagement() {
                       .filter(p => p.status === "available")
                       .map((property) => (
                         <TableRow key={property.id}>
-                          <TableCell className="font-medium">{property.id}</TableCell>
+                          <TableCell className="font-medium">{property.id.substring(0, 8)}...</TableCell>
                           <TableCell>
                             {property.name}
                             {property.featured && (
@@ -423,7 +563,10 @@ export function PropertyManagement() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  setSelectedProperty(property);
+                                  setIsEditing(true);
+                                }}>
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit
                                 </DropdownMenuItem>
@@ -448,7 +591,7 @@ export function PropertyManagement() {
             </div>
           </TabsContent>
           
-          {/* Repeat similar structure for "rented" and "maintenance" tabs */}
+          {/* Similar structure for "rented" and "maintenance" tabs */}
           <TabsContent value="rented" className="mt-0">
             <div className="rounded-md border">
               <Table>
@@ -470,7 +613,7 @@ export function PropertyManagement() {
                       .filter(p => p.status === "rented")
                       .map((property) => (
                         <TableRow key={property.id}>
-                          <TableCell className="font-medium">{property.id}</TableCell>
+                          <TableCell className="font-medium">{property.id.substring(0, 8)}...</TableCell>
                           <TableCell>{property.name}</TableCell>
                           <TableCell className="hidden md:table-cell">{property.address}</TableCell>
                           <TableCell className="hidden md:table-cell">{property.type}</TableCell>
@@ -489,7 +632,10 @@ export function PropertyManagement() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  setSelectedProperty(property);
+                                  setIsEditing(true);
+                                }}>
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit
                                 </DropdownMenuItem>
@@ -535,7 +681,7 @@ export function PropertyManagement() {
                       .filter(p => p.status === "maintenance")
                       .map((property) => (
                         <TableRow key={property.id}>
-                          <TableCell className="font-medium">{property.id}</TableCell>
+                          <TableCell className="font-medium">{property.id.substring(0, 8)}...</TableCell>
                           <TableCell>{property.name}</TableCell>
                           <TableCell className="hidden md:table-cell">{property.address}</TableCell>
                           <TableCell className="hidden md:table-cell">{property.type}</TableCell>
@@ -554,7 +700,10 @@ export function PropertyManagement() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  setSelectedProperty(property);
+                                  setIsEditing(true);
+                                }}>
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit
                                 </DropdownMenuItem>
@@ -580,6 +729,174 @@ export function PropertyManagement() {
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      {/* Edit dialog */}
+      {selectedProperty && (
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Edit Property</DialogTitle>
+              <DialogDescription>
+                Edit the details for this property. Click save when you're done.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-name">Property Name</Label>
+                  <Input 
+                    id="edit-name" 
+                    value={selectedProperty.name}
+                    onChange={(e) => setSelectedProperty({...selectedProperty, name: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-type">Property Type</Label>
+                  <Select 
+                    value={selectedProperty.type} 
+                    onValueChange={(value) => setSelectedProperty({...selectedProperty, type: value})}
+                  >
+                    <SelectTrigger id="edit-type">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Apartment">Apartment</SelectItem>
+                      <SelectItem value="Condo">Condo</SelectItem>
+                      <SelectItem value="House">House</SelectItem>
+                      <SelectItem value="Loft">Loft</SelectItem>
+                      <SelectItem value="Studio">Studio</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="edit-address">Address</Label>
+                <Input 
+                  id="edit-address" 
+                  value={selectedProperty.address}
+                  onChange={(e) => setSelectedProperty({...selectedProperty, address: e.target.value})}
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea 
+                  id="edit-description" 
+                  value={selectedProperty.description || ''}
+                  onChange={(e) => setSelectedProperty({...selectedProperty, description: e.target.value})}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-units">Units</Label>
+                  <Input 
+                    id="edit-units" 
+                    type="number"
+                    min="1"
+                    value={selectedProperty.units}
+                    onChange={(e) => setSelectedProperty({...selectedProperty, units: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-rent">Monthly Rent</Label>
+                  <Input 
+                    id="edit-rent" 
+                    value={selectedProperty.rent}
+                    onChange={(e) => setSelectedProperty({...selectedProperty, rent: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-bedrooms">Bedrooms</Label>
+                  <Input 
+                    id="edit-bedrooms" 
+                    type="number"
+                    min="0"
+                    value={selectedProperty.bedrooms || 1}
+                    onChange={(e) => setSelectedProperty({...selectedProperty, bedrooms: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-bathrooms">Bathrooms</Label>
+                  <Input 
+                    id="edit-bathrooms" 
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={selectedProperty.bathrooms || 1}
+                    onChange={(e) => setSelectedProperty({...selectedProperty, bathrooms: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-size_sqft">Area (sq ft)</Label>
+                  <Input 
+                    id="edit-size_sqft" 
+                    type="number"
+                    min="1"
+                    value={selectedProperty.size_sqft || 1000}
+                    onChange={(e) => setSelectedProperty({...selectedProperty, size_sqft: parseInt(e.target.value)})}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select 
+                    value={selectedProperty.status} 
+                    onValueChange={(value) => setSelectedProperty({...selectedProperty, status: value})}
+                  >
+                    <SelectTrigger id="edit-status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="available">Available</SelectItem>
+                      <SelectItem value="rented">Rented</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2 h-full pt-8">
+                  <Label htmlFor="edit-featured" className="cursor-pointer flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="edit-featured"
+                      checked={selectedProperty.featured}
+                      onChange={(e) => setSelectedProperty({...selectedProperty, featured: e.target.checked})}
+                      className="h-4 w-4"
+                    />
+                    Featured Listing
+                  </Label>
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="edit-image_url">Property Image URL</Label>
+                <Input 
+                  id="edit-image_url" 
+                  value={selectedProperty.image_url || ''}
+                  onChange={(e) => setSelectedProperty({...selectedProperty, image_url: e.target.value})}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setSelectedProperty(null);
+                setIsEditing(false);
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleEditProperty}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 }

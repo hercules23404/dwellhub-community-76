@@ -177,72 +177,110 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string | null
           first_name: string | null
           id: string
           last_name: string | null
           phone_number: string | null
+          property_id: string | null
+          tenant_status: string | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
           phone_number?: string | null
+          property_id?: string | null
+          tenant_status?: string | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           phone_number?: string | null
+          property_id?: string | null
+          tenant_status?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       properties: {
         Row: {
           address: string
+          bathrooms: number | null
+          bedrooms: number | null
           created_at: string | null
+          description: string | null
           featured: boolean
           id: string
+          image_url: string | null
           name: string
+          owner_id: string | null
           property_id: string
           rent: string
+          size_sqft: number | null
           status: string
           type: string
           units: number
           updated_at: string | null
+          year_built: number | null
         }
         Insert: {
           address: string
+          bathrooms?: number | null
+          bedrooms?: number | null
           created_at?: string | null
+          description?: string | null
           featured?: boolean
           id?: string
+          image_url?: string | null
           name: string
+          owner_id?: string | null
           property_id: string
           rent: string
+          size_sqft?: number | null
           status?: string
           type: string
           units?: number
           updated_at?: string | null
+          year_built?: number | null
         }
         Update: {
           address?: string
+          bathrooms?: number | null
+          bedrooms?: number | null
           created_at?: string | null
+          description?: string | null
           featured?: boolean
           id?: string
+          image_url?: string | null
           name?: string
+          owner_id?: string | null
           property_id?: string
           rent?: string
+          size_sqft?: number | null
           status?: string
           type?: string
           units?: number
           updated_at?: string | null
+          year_built?: number | null
         }
         Relationships: []
       }
@@ -338,12 +376,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

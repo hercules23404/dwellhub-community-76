@@ -29,14 +29,14 @@ export function useProperties() {
         return {
           id: property.id,
           title: property.name,
-          description: `Property in ${property.address}`,
+          description: property.description || `Property in ${property.address}`,
           price: numericRent,
           address: property.address,
-          bedrooms: Math.floor(Math.random() * 3) + 1, // Example: random between 1-3
-          bathrooms: Math.floor(Math.random() * 2) + 1, // Example: random between 1-2
-          area: Math.floor(Math.random() * 1000) + 500, // Example: random between 500-1500
+          bedrooms: property.bedrooms || Math.floor(Math.random() * 3) + 1,
+          bathrooms: property.bathrooms || Math.floor(Math.random() * 2) + 1,
+          area: property.size_sqft || Math.floor(Math.random() * 1000) + 500,
           images: [
-            "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800",
+            property.image_url || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800",
           ],
           type: property.type,
           listingDate: formatDate(property.created_at),
@@ -73,8 +73,54 @@ export function useProperties() {
     }
   };
 
+  // Add function to create a new property
+  const addProperty = async (propertyData: Omit<PropertyData, 'id' | 'listingDate'>) => {
+    try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("You must be logged in to add a property");
+        return null;
+      }
+      
+      // Format the property data for Supabase
+      const { data, error } = await supabase
+        .from('properties')
+        .insert({
+          name: propertyData.title,
+          address: propertyData.address,
+          type: propertyData.type,
+          rent: `$${propertyData.price}`,
+          status: propertyData.status || 'available',
+          owner_id: user.id,
+          bedrooms: propertyData.bedrooms,
+          bathrooms: propertyData.bathrooms,
+          size_sqft: propertyData.area,
+          description: propertyData.description,
+          image_url: propertyData.images[0]
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      // Refresh the properties list
+      await fetchProperties();
+      
+      toast.success("Property added successfully");
+      return data;
+    } catch (error: any) {
+      console.error('Error adding property:', error);
+      toast.error(error.message || "Failed to add property");
+      return null;
+    }
+  };
+
   return {
     properties,
-    loading
+    loading,
+    fetchProperties,
+    addProperty
   };
 }

@@ -8,7 +8,15 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (data: { email: string; password: string; firstName: string; lastName: string }) => Promise<void>;
+  signUp: (data: { 
+    email: string; 
+    password: string; 
+    firstName: string; 
+    lastName: string;
+    bio?: string;
+    tenantStatus?: string;
+    phoneNumber?: string;
+  }) => Promise<void>;
   signIn: (data: { email: string; password: string }) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -49,12 +57,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Sign up function
-  const signUp = async ({ email, password, firstName, lastName }: { 
+  // Sign up function with expanded profile data
+  const signUp = async ({ 
+    email, 
+    password, 
+    firstName, 
+    lastName,
+    bio,
+    tenantStatus,
+    phoneNumber
+  }: { 
     email: string; 
     password: string;
     firstName: string;
     lastName: string;
+    bio?: string;
+    tenantStatus?: string;
+    phoneNumber?: string;
   }) => {
     try {
       const { error } = await supabase.auth.signUp({
@@ -64,6 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             first_name: firstName,
             last_name: lastName,
+            bio: bio || '',
+            tenant_status: tenantStatus || 'tenant',
+            phone_number: phoneNumber || ''
           },
         },
       });
