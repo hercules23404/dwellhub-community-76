@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UserButton } from "@/components/auth/UserButton";
 import { useState, useEffect } from "react";
 import { Sparkles, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
   className?: string;
@@ -12,6 +13,7 @@ interface NavbarProps {
 
 export function Navbar({ className }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,29 +51,33 @@ export function Navbar({ className }: NavbarProps) {
             <Sparkles className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
           
-          <Button variant="ghost" size="sm" className="flex items-center gap-2" asChild>
-            <Link to="/profile">
-              <User className="h-4 w-4" />
-              <span>My Profile</span>
-            </Link>
-          </Button>
+          {user && (
+            <Button variant="ghost" size="sm" className="flex items-center gap-2" asChild>
+              <Link to="/profile">
+                <User className="h-4 w-4" />
+                <span>My Profile</span>
+              </Link>
+            </Button>
+          )}
         </div>
         
         <div className="flex items-center space-x-6">
-          <div className="hidden md:flex space-x-1">
-            <Button variant="ghost" className="hover:bg-primary/10" asChild>
-              <Link to="/home">Home</Link>
-            </Button>
-            <Button variant="ghost" className="hover:bg-primary/10" asChild>
-              <Link to="/notices">Notices</Link>
-            </Button>
-            <Button variant="ghost" className="hover:bg-primary/10" asChild>
-              <Link to="/properties">Properties</Link>
-            </Button>
-            <Button variant="ghost" className="hover:bg-primary/10" asChild>
-              <Link to="/services">Services</Link>
-            </Button>
-          </div>
+          {user && (
+            <div className="hidden md:flex space-x-1">
+              <Button variant="ghost" className="hover:bg-primary/10" asChild>
+                <Link to="/home">Home</Link>
+              </Button>
+              <Button variant="ghost" className="hover:bg-primary/10" asChild>
+                <Link to="/notices">Notices</Link>
+              </Button>
+              <Button variant="ghost" className="hover:bg-primary/10" asChild>
+                <Link to="/properties">Properties</Link>
+              </Button>
+              <Button variant="ghost" className="hover:bg-primary/10" asChild>
+                <Link to="/services">Services</Link>
+              </Button>
+            </div>
+          )}
           <UserButton />
         </div>
       </div>

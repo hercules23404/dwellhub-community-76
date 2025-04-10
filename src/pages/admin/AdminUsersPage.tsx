@@ -2,21 +2,26 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdmin } from "@/contexts/AdminContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminUserManagement } from "@/components/admin/AdminUserManagement";
 
 export default function AdminUsersPage() {
+  const { user } = useAuth();
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!user) {
+      toast.error("You must be logged in to access the admin area");
+      navigate("/auth?redirect=/admin/users");
+    } else if (!isAdmin) {
       toast.error("You don't have access to the admin area");
-      navigate("/login");
+      navigate("/home");
     }
-  }, [isAdmin, navigate]);
+  }, [user, isAdmin, navigate]);
 
   if (!isAdmin) return null;
 

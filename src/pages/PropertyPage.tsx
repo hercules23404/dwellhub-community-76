@@ -44,6 +44,7 @@ export default function PropertyPage() {
     area: "1000",
     type: "Apartment",
     status: "vacant",
+    features: [""],
     images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800"]
   });
 
@@ -84,6 +85,7 @@ export default function PropertyPage() {
         bedrooms: parseInt(propertyData.bedrooms),
         bathrooms: parseInt(propertyData.bathrooms),
         area: parseInt(propertyData.area),
+        features: ["Furnished", "Parking", "Pet Friendly"]  // Default features for now
       });
 
       // Reset form and close dialog
@@ -97,6 +99,7 @@ export default function PropertyPage() {
         area: "1000",
         type: "Apartment",
         status: "vacant",
+        features: [""],
         images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800"]
       });
       setShowAddDialog(false);
