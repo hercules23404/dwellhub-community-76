@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { PropertyCard, PropertyData, PropertyStatus } from "./PropertyCard";
 import { Button } from "@/components/ui/button";

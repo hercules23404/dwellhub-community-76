@@ -51,13 +51,12 @@ export function NoticeList({ className }: { className?: string }) {
       setLoading(true);
       const { data, error } = await supabase
         .from('notices')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
       
       if (error) throw error;
       
       // Transform Supabase data to match NoticeData format
-      const transformedData = data.map(notice => ({
+      const transformedData: NoticeData[] = data.map(notice => ({
         id: notice.id,
         title: notice.title,
         content: notice.content,

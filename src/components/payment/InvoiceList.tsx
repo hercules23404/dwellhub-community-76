@@ -54,7 +54,7 @@ export function InvoiceList() {
         id: payment.payment_id,
         date: payment.created_at,
         dueDate: payment.due_date || payment.created_at,
-        amount: parseFloat(payment.amount),
+        amount: Number(payment.amount),
         status: payment.status === 'paid' ? 'paid' : 
                payment.status === 'overdue' ? 'overdue' : 'unpaid',
         description: payment.type.charAt(0).toUpperCase() + payment.type.slice(1),

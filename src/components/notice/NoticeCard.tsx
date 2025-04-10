@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -85,18 +85,20 @@ export function NoticeCard({ notice, className, onReadToggle }: NoticeCardProps)
     try {
       if (isLiked) {
         // Unlike the notice
-        await supabase
+        const { error } = await supabase
           .from('notice_likes')
           .delete()
           .match({ notice_id: notice.id, user_id: user.id });
         
+        if (error) throw error;
         setLikesCount(prev => prev - 1);
       } else {
         // Like the notice
-        await supabase
+        const { error } = await supabase
           .from('notice_likes')
           .insert({ notice_id: notice.id, user_id: user.id });
         
+        if (error) throw error;
         setLikesCount(prev => prev + 1);
       }
       
@@ -152,16 +154,22 @@ export function NoticeCard({ notice, className, onReadToggle }: NoticeCardProps)
     if (user) {
       const checkLikeStatus = async () => {
         try {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('notice_likes')
             .select('id')
-            .match({ notice_id: notice.id, user_id: user.id })
+            .eq('notice_id', notice.id)
+            .eq('user_id', user.id)
             .single();
+          
+          if (error) {
+            // If error is 'No rows found', it means user hasn't liked the notice
+            console.log('Like status check:', error);
+            return;
+          }
           
           setIsLiked(!!data);
         } catch (error) {
-          // If error is 'No rows found', it means user hasn't liked the notice
-          console.log('Like status check:', error);
+          console.error('Error checking like status:', error);
         }
       };
       
