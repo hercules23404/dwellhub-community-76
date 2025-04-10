@@ -13,34 +13,29 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, User, Settings, Bell, Building, HelpCircle, Shield } from "lucide-react";
 import { useAdmin } from "@/contexts/AdminContext";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function UserButton() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const { isAdmin, logout } = useAdmin();
+  const { isAdmin, logout: logoutAdmin } = useAdmin();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Check if user is logged in based on url path
-  useEffect(() => {
-    const path = window.location.pathname;
-    // If path includes admin or is not the login or root page
-    if (path.includes('admin') || (path !== '/login' && path !== '/')) {
-      setIsLoggedIn(true);
-    }
-  }, []);
+  const isLoggedIn = !!user;
 
-  const handleLogout = () => {
-    // Perform logout actions
-    setIsLoggedIn(false);
-    logout();
-    toast.success("Logged out successfully");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      logoutAdmin(); // Also clear admin state
+      navigate("/auth");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   if (!isLoggedIn) {
     return (
       <Link 
-        to="/login" 
+        to="/auth" 
         className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background 
                   transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
                   focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary 
@@ -51,6 +46,28 @@ export function UserButton() {
     );
   }
 
+  // Get user's initials or first letter of email for avatar
+  const getUserInitials = () => {
+    if (!user) return "U";
+    
+    if (user.user_metadata?.first_name) {
+      return user.user_metadata.first_name.charAt(0).toUpperCase();
+    }
+    
+    return user.email?.charAt(0).toUpperCase() || "U";
+  };
+
+  // Get display name from metadata or email
+  const getDisplayName = () => {
+    if (!user) return "User";
+    
+    if (user.user_metadata?.first_name && user.user_metadata?.last_name) {
+      return `${user.user_metadata.first_name} ${user.user_metadata.last_name}`;
+    }
+    
+    return user.email?.split('@')[0] || "User";
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -58,7 +75,7 @@ export function UserButton() {
           <Avatar className={`h-10 w-10 border ${isAdmin ? 'border-red-200' : ''}`}>
             <AvatarImage src="/placeholder.svg" alt="User avatar" />
             <AvatarFallback className={isAdmin ? "bg-red-500/10 text-red-700" : "bg-primary/5"}>
-              {isAdmin ? "A" : "U"}
+              {getUserInitials()}
             </AvatarFallback>
           </Avatar>
           {isAdmin && (
@@ -72,13 +89,13 @@ export function UserButton() {
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-medium">{isAdmin ? "Admin User" : "John Doe"}</p>
+              <p className="text-sm font-medium">{isAdmin ? "Admin User" : getDisplayName()}</p>
               {isAdmin && (
                 <Badge className="bg-red-100 text-red-700 border-red-200 text-xs">Admin</Badge>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {isAdmin ? "admin@example.com" : "testuser@example.com"}
+              {user?.email || "user@example.com"}
             </p>
           </div>
         </DropdownMenuLabel>

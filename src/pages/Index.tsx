@@ -1,11 +1,21 @@
-
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/Container";
 import { useNavigate } from "react-router-dom";
 import { Building, Bell, Wrench, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Index() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Redirect to home if already logged in
+  const handleGetStarted = () => {
+    if (user) {
+      navigate("/home");
+    } else {
+      navigate("/auth");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -33,9 +43,9 @@ export default function Index() {
               <Button 
                 size="lg" 
                 className="w-full sm:w-auto"
-                onClick={() => navigate("/login")}
+                onClick={handleGetStarted}
               >
-                Get Started
+                {user ? "Go to Dashboard" : "Get Started"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button 
