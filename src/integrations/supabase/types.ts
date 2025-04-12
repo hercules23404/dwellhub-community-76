@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      maintenance_requests: {
+        Row: {
+          assigned_worker_id: string | null
+          cost: number | null
+          created_at: string | null
+          description: string
+          id: string
+          issue_type: string
+          society_id: string
+          status: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_worker_id?: string | null
+          cost?: number | null
+          created_at?: string | null
+          description: string
+          id?: string
+          issue_type: string
+          society_id: string
+          status?: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_worker_id?: string | null
+          cost?: number | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          issue_type?: string
+          society_id?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notice_comments: {
         Row: {
           content: string
@@ -394,6 +433,39 @@ export type Database = {
           id?: string
           role?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      utility_workers: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          phone_number: string | null
+          society_id: string
+          specialty: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone_number?: string | null
+          society_id: string
+          specialty: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone_number?: string | null
+          society_id?: string
+          specialty?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

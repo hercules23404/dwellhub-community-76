@@ -1,160 +1,156 @@
-
-import { useEffect, useState, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { 
+  Home, 
+  Bell, 
+  Building, 
+  Wrench, 
+  CreditCard, 
+  Settings, 
+  LogOut, 
+  Menu, 
+  X,
+  Shield,
+  Users,
+  LayoutDashboard
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Home, Bell, Building, Wrench, LogOut, Menu, X } from "lucide-react";
-import { useAdmin } from "@/contexts/AdminContext";
-import { toast } from "sonner";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-interface SidebarProps {
-  className?: string;
-}
-
-export function Sidebar({ className }: SidebarProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
+export function Sidebar() {
+  const { user, isAdmin, signOut } = useAuth();
   const location = useLocation();
-  const currentPath = location.pathname;
-  const { logout } = useAdmin();
-  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Handle sidebar hover
-  const handleMouseEnter = () => {
-    setIsHovering(true);
+  // Check if the current route is active
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    // On mobile, don't close when mouse leaves if it was explicitly opened
-    if (window.innerWidth >= 1024) {
-      setIsOpen(false);
-    }
-  };
-
-  // Close sidebar on large screens when navigating
+  // Handle window resize
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsOpen(false);
-      }
-    };
-    
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Close sidebar when navigating on mobile
-  useEffect(() => {
-    if (window.innerWidth < 1024) {
-      setIsOpen(false);
-    }
-  }, [location]);
-
-  // Handle click outside to close sidebar
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node) && window.innerWidth < 1024) {
-        setIsOpen(false);
-      }
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 1024);
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", checkScreenSize);
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    toast.success("Logged out successfully");
-    navigate("/login");
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
-  const navigationItems = [
+  // Navigation items for tenant users
+  const tenantNavItems = [
     { name: "Home", path: "/home", icon: Home },
     { name: "Notices", path: "/notices", icon: Bell },
     { name: "Properties", path: "/properties", icon: Building },
     { name: "Services", path: "/services", icon: Wrench },
+    { name: "Maintenance", path: "/maintenance", icon: Wrench },
+    { name: "Payments", path: "/payments", icon: CreditCard },
+    { name: "Profile", path: "/profile", icon: Settings },
   ];
 
-  return (
-    <>
-      {/* Mobile menu button */}
-      <div className="fixed top-6 right-6 z-50 lg:hidden">
+  // Navigation items for admin users
+  const adminNavItems = [
+    { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
+    { name: "Properties", path: "/admin/properties", icon: Building },
+    { name: "Tenants", path: "/admin/tenants", icon: Users },
+    { name: "Services", path: "/admin/services", icon: Wrench },
+    { name: "Maintenance", path: "/admin/maintenance", icon: Wrench },
+    { name: "Notices", path: "/admin/notices", icon: Bell },
+    { name: "Users", path: "/admin/users", icon: Shield },
+  ];
+
+  // Select the appropriate navigation items based on user role
+  const navItems = isAdmin ? adminNavItems : tenantNavItems;
+
+  // Sidebar content component (used in both desktop and mobile views)
+  const SidebarContent = () => (
+    <div className="flex h-full flex-col border-r bg-background">
+      <div className="flex-1 overflow-auto py-2">
+        <nav className="grid items-start px-2 text-sm font-medium">
+          <div className="px-3 py-2">
+            <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+              {isAdmin ? "Admin Portal" : "Tenant Portal"}
+            </h2>
+            <div className="space-y-1">
+              <ul>
+                {navItems.map((item) => (
+                  <li key={item.path} className="mt-2">
+                    <Link
+                      to={item.path}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
+                        isActive(item.path)
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </div>
+      <div className="mt-auto p-4">
         <Button
           variant="outline"
-          size="icon"
-          onClick={() => setIsOpen(!isOpen)}
-          className="bg-white/80 backdrop-blur-md shadow-sm border rounded-full h-10 w-10"
+          className="w-full justify-start"
+          onClick={handleLogout}
         >
-          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          <LogOut className="mr-2 h-4 w-4" />
+          Log out
         </Button>
       </div>
+    </div>
+  );
 
-      {/* Sidebar */}
-      <div
-        ref={sidebarRef}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={cn(
-          "fixed inset-y-0 right-0 z-40 w-64 bg-sidebar shadow-lg border-l border-sidebar-border transition-all duration-300 transform lg:translate-x-[calc(100%-0.5rem)] h-full",
-          (isOpen || isHovering) ? "translate-x-0 lg:translate-x-0" : "translate-x-full",
-          className
-        )}
-      >
-        <div className="flex flex-col h-full py-6">
-          <div className="px-4 mb-8 flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-              A
-            </div>
-            <h2 className="font-medium text-lg tracking-tight">AVA</h2>
-          </div>
-
-          <nav className="flex-1 px-2 space-y-1">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={cn(
-                  "flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-sidebar-accent group",
-                  currentPath === item.path
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:text-sidebar-foreground"
-                )}
-              >
-                <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="px-2 mt-auto">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-sm bg-sidebar-accent/50"
-              onClick={handleLogout}
+  // Mobile sidebar (sheet component)
+  if (isMobile) {
+    return (
+      <>
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="fixed bottom-4 right-4 z-40 h-12 w-12 rounded-full shadow-lg lg:hidden"
             >
-              <LogOut className="mr-3 h-4 w-4" /> Sign Out
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Toggle Menu</span>
             </Button>
-          </div>
-        </div>
-      </div>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
 
-      {/* Visual indicator for hover zone on desktop */}
-      <div 
-        className="fixed inset-y-0 right-0 w-2 z-30 hidden lg:block cursor-pointer"
-        onMouseEnter={handleMouseEnter}
-      />
-
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 lg:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-    </>
+  // Desktop sidebar
+  return (
+    <div className="fixed bottom-0 right-0 top-16 z-30 hidden w-64 border-l lg:block">
+      <SidebarContent />
+    </div>
   );
 }

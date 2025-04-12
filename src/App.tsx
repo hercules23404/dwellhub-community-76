@@ -17,6 +17,7 @@ import PropertyPage from "./pages/PropertyPage";
 import ServicePage from "./pages/ServicePage";
 import PaymentPage from "./pages/PaymentPage";
 import ProfilePage from "./pages/ProfilePage";
+import MaintenancePage from "./pages/MaintenancePage"; // Add import
 import NotFound from "./pages/NotFound";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminPropertiesPage from "./pages/admin/AdminPropertiesPage";
@@ -25,6 +26,7 @@ import AdminServicesPage from "./pages/admin/AdminServicesPage";
 import AdminNoticesPage from "./pages/admin/AdminNoticesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSetupPage from "./pages/admin/AdminSetupPage";
+import AdminMaintenancePage from "./pages/admin/AdminMaintenancePage"; // Add import
 import TenantSetupPage from "./pages/tenant/TenantSetupPage";
 
 const queryClient = new QueryClient();
@@ -80,6 +82,11 @@ const App = () => (
                   <PaymentPage />
                 </RequireAuth>
               } />
+              <Route path="/maintenance" element={
+                <RequireAuth>
+                  <MaintenancePage />
+                </RequireAuth>
+              } />
               <Route path="/profile" element={
                 <RequireAuth>
                   <ProfilePage />
@@ -110,6 +117,11 @@ const App = () => (
               <Route path="/admin/notices" element={
                 <RequireAuth requireAdmin={true}>
                   <AdminNoticesPage />
+                </RequireAuth>
+              } />
+              <Route path="/admin/maintenance" element={
+                <RequireAuth requireAdmin={true}>
+                  <AdminMaintenancePage />
                 </RequireAuth>
               } />
               <Route path="/admin/users" element={
