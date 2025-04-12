@@ -94,7 +94,13 @@ export const updateMaintenanceRequest = async (
 };
 
 // Add a new utility worker (admin only)
-export const addUtilityWorker = async (worker: Omit<UtilityWorker, "id" | "created_at" | "updated_at">) => {
+export const addUtilityWorker = async (worker: {
+  society_id: string;
+  name: string;
+  specialty: string;
+  phone_number: string | null;
+  email: string | null;
+}) => {
   const { data, error } = await supabase
     .from("utility_workers")
     .insert(worker)

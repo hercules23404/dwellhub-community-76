@@ -36,6 +36,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2, Plus } from "lucide-react";
 
+// Update the worker schema to make name and specialty required
 const workerSchema = z.object({
   name: z.string().min(2, "Name is required"),
   specialty: z.string().min(2, "Specialty is required"),
@@ -87,9 +88,13 @@ export function WorkerManagement({ societyId }: WorkerManagementProps) {
   const onSubmit = async (data: WorkerFormValues) => {
     setIsAddingWorker(true);
     try {
+      // Fix: Make sure name and specialty are always provided, as required by the UtilityWorker type
       await addUtilityWorker({
         society_id: societyId,
-        ...data,
+        name: data.name,           // Now this is guaranteed to be a string
+        specialty: data.specialty, // Now this is guaranteed to be a string
+        phone_number: data.phone_number || null,
+        email: data.email || null,
       });
       
       form.reset();
