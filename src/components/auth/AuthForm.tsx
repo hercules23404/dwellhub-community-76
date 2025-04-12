@@ -66,7 +66,11 @@ export function AuthForm() {
     setIsLoading(true);
     
     try {
-      await signIn(data);
+      // Fix: Ensure we pass the required email and password fields
+      await signIn({
+        email: data.email,
+        password: data.password
+      });
       
       // Check if user is admin and redirect accordingly
       const { data: roleData } = await supabase
