@@ -16,8 +16,14 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        // Redirect to auth page if not logged in
-        navigate(`/auth?redirect=${encodeURIComponent(location.pathname)}`, { replace: true });
+        // Get the current user type (admin or tenant) from path
+        const isAdminPath = location.pathname.includes('/admin');
+        // Redirect to auth page with appropriate type parameter
+        const authPath = isAdminPath 
+          ? `/auth?type=admin&redirect=${encodeURIComponent(location.pathname)}`
+          : `/auth?redirect=${encodeURIComponent(location.pathname)}`;
+        
+        navigate(authPath, { replace: true });
       } else if (requireAdmin && !isAdmin) {
         // Redirect to home if admin access is required but user is not admin
         navigate('/home', { replace: true });
@@ -60,13 +66,13 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
               return;
             }
             
-            // For admin users, redirect to admin setup if no society is set
-            if (isAdmin && !data?.society_id && !location.pathname.includes('/admin/setup')) {
+            // For admin users, always redirect to admin setup if no society is set
+            if (isAdmin && !data?.society_id) {
               navigate('/admin/setup', { replace: true });
               return;
             }
             // For tenant users, redirect to tenant setup if no society is set
-            else if (!isAdmin && !data?.society_id && !location.pathname.includes('/tenant/setup')) {
+            else if (!isAdmin && !data?.society_id) {
               navigate('/tenant/setup', { replace: true });
               return;
             }

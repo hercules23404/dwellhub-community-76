@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -103,12 +104,12 @@ export function LoginForm({ className }: LoginFormProps) {
           login(true);
           toast.success("Admin login successful!");
           
-          // Explicitly redirect admin users to setup page
-          navigate("/admin/setup");
+          // Always redirect admin users to admin setup page
+          navigate("/admin/setup", { replace: true });
         } else {
           login(false);
           toast.success("Login successful!");
-          navigate("/home");
+          navigate("/tenant/setup", { replace: true });
         }
       } else {
         // Register - will redirect to society setup or society selection

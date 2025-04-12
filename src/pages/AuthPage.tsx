@@ -14,8 +14,11 @@ export default function AuthPage() {
   // Redirect authenticated users appropriately
   useEffect(() => {
     if (user && !loading) {
-      // For admin users, always redirect to admin setup
-      if (isAdmin) {
+      // Get the type from the URL - important for determining proper redirects
+      const userType = new URLSearchParams(location.search).get("type") || "tenant";
+      
+      // For admin users or admin login attempt, redirect to admin setup
+      if (isAdmin || userType === "admin") {
         navigate("/admin/setup", { replace: true });
         return;
       }
