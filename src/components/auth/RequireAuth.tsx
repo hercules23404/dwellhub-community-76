@@ -28,7 +28,8 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
         // Skip profile setup checks for auth, setup pages, and root landing page
         if (location.pathname.includes('/auth') || 
             location.pathname.includes('/setup') ||
-            location.pathname === '/') {
+            location.pathname === '/' ||
+            location.pathname === '/login') {
           return;
         }
         
@@ -50,7 +51,7 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
             
             // If everything is set up and user is on a setup page, redirect to home
             if (location.pathname.includes('/setup')) {
-              navigate('/home', { replace: true });
+              navigate('/login', { replace: true });
             }
             
           } catch (error) {

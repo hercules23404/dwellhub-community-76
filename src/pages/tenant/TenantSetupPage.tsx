@@ -21,7 +21,7 @@ interface Society {
 }
 
 export default function TenantSetupPage() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [societies, setSocieties] = useState<Society[]>([]);
@@ -52,7 +52,7 @@ export default function TenantSetupPage() {
         
         if (data?.society_id && data?.flat_number) {
           toast.info("Your profile is already set up.");
-          navigate("/home");
+          navigate("/login");
           return;
         }
         
@@ -161,7 +161,10 @@ export default function TenantSetupPage() {
       if (error) throw error;
       
       toast.success("Profile has been successfully set up!");
-      navigate("/home");
+      
+      // Sign out the user and redirect to login page after setup
+      await signOut();
+      navigate("/login");
       
     } catch (error: any) {
       toast.error(error.message || "Failed to update profile");
