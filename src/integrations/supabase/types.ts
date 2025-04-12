@@ -379,6 +379,45 @@ export type Database = {
           },
         ]
       }
+      societies: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_dummy: boolean | null
+          name: string
+          num_flats: number
+          updated_at: string | null
+          utility_workers: string[] | null
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_dummy?: boolean | null
+          name: string
+          num_flats: number
+          updated_at?: string | null
+          utility_workers?: string[] | null
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_dummy?: boolean | null
+          name?: string
+          num_flats?: number
+          updated_at?: string | null
+          utility_workers?: string[] | null
+        }
+        Relationships: []
+      }
       User: {
         Row: {
           bio: string | null

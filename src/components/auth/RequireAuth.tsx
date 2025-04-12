@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -25,7 +26,8 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
         
         navigate(authPath, { replace: true });
       } else if (requireAdmin && !isAdmin) {
-        // Redirect to home if admin access is required but user is not admin
+        // Unauthorized access attempt - redirect to tenant home
+        toast.error("You don't have permission to access this area");
         navigate('/home', { replace: true });
       } else {
         // Skip profile setup checks for auth and setup pages
@@ -76,6 +78,20 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
               navigate('/tenant/setup', { replace: true });
               return;
             }
+
+            // Ensure tenant users can't access admin routes
+            if (!isAdmin && location.pathname.includes('/admin')) {
+              toast.error("You don't have permission to access admin areas");
+              navigate('/home', { replace: true });
+              return;
+            }
+            
+            // Ensure admin users can't access tenant-specific setup
+            if (isAdmin && location.pathname.includes('/tenant/setup')) {
+              navigate('/admin/setup', { replace: true });
+              return;
+            }
+            
           } catch (error) {
             console.error("Error checking profile setup:", error);
             

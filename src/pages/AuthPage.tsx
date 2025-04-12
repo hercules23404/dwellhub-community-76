@@ -10,28 +10,80 @@ export default function AuthPage() {
   const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const userType = searchParams.get("type") || "tenant";
 
   // Redirect authenticated users appropriately
   useEffect(() => {
     if (user && !loading) {
-      // Get the type from the URL - important for determining proper redirects
-      const userType = new URLSearchParams(location.search).get("type") || "tenant";
+      // Get redirect path if any
+      const redirectTo = searchParams.get("redirect");
       
-      // For admin users or admin login attempt, redirect to admin setup
+      // For admin users or admin login attempt
       if (isAdmin || userType === "admin") {
-        navigate("/admin/setup", { replace: true });
+        // Check if admin has already set up a society
+        const checkAdminSociety = async () => {
+          try {
+            const { supabase } = await import('@/integrations/supabase/client');
+            
+            // Check if profile has society_id
+            const { data: profileData } = await supabase
+              .from('user_profiles')
+              .select('society_id')
+              .eq('id', user.id)
+              .maybeSingle();
+            
+            // Check societies created by this admin
+            const { data: societyData } = await supabase
+              .from('societies')
+              .select('id')
+              .eq('created_by', user.id)
+              .maybeSingle();
+            
+            // Redirect to setup if no society, otherwise to dashboard
+            if (!profileData?.society_id && !societyData?.id) {
+              navigate("/admin/setup", { replace: true });
+            } else {
+              navigate(redirectTo || "/admin/dashboard", { replace: true });
+            }
+          } catch (error) {
+            console.error("Error checking admin society:", error);
+            // Default to setup on error
+            navigate("/admin/setup", { replace: true });
+          }
+        };
+        
+        checkAdminSociety();
         return;
       }
 
       // For tenant users
-      const redirectTo = new URLSearchParams(location.search).get("redirect");
-      if (redirectTo) {
-        navigate(redirectTo, { replace: true });
-      } else {
-        navigate("/tenant/setup", { replace: true });
-      }
+      const checkTenantProfile = async () => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          
+          const { data } = await supabase
+            .from('user_profiles')
+            .select('society_id, flat_number')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          // Redirect to tenant setup if profile is incomplete
+          if (!data?.society_id || !data?.flat_number) {
+            navigate("/tenant/setup", { replace: true });
+          } else {
+            navigate(redirectTo || "/home", { replace: true });
+          }
+        } catch (error) {
+          console.error("Error checking tenant profile:", error);
+          // Default to tenant setup on error
+          navigate("/tenant/setup", { replace: true });
+        }
+      };
+      
+      checkTenantProfile();
     }
-  }, [user, loading, isAdmin, navigate, location.search]);
+  }, [user, loading, isAdmin, navigate, location.search, userType]);
 
   // Don't render anything while checking authentication
   if (loading) return null;
@@ -59,9 +111,12 @@ export default function AuthPage() {
           <p className="text-muted-foreground max-w-md mx-auto">
             Your community property and service management platform
           </p>
+          <Badge variant={userType === "admin" ? "default" : "outline"} className="mb-2">
+            {userType === "admin" ? "Admin Sign In" : "Tenant Sign In"}
+          </Badge>
         </div>
         <div className="w-full max-w-md p-1 gradient-border rounded-xl">
-          <AuthForm />
+          <AuthForm userType={userType} />
         </div>
       </Container>
     </div>
