@@ -44,6 +44,8 @@ export function LoginForm({ onSwitchToSignup, userType }: LoginFormProps) {
       await signIn({ email, password });
       
       // Auth context will handle redirection based on user role
+      // Admin -> '/admin/dashboard'
+      // Tenant -> '/home'
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(error.message || "Invalid login credentials");

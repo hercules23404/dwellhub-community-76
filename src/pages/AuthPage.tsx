@@ -19,7 +19,7 @@ export default function AuthPage() {
     if (user && !loading) {
       const redirectTo = searchParams.get("redirect");
       
-      if (isAdmin || userType === "admin") {
+      if (isAdmin) {
         const checkAdminSociety = async () => {
           try {
             const { supabase } = await import('@/integrations/supabase/client');
@@ -37,8 +37,10 @@ export default function AuthPage() {
               .maybeSingle();
             
             if (!profileData?.society_id && !societyData?.id) {
+              // Direct admin to society setup after signup
               navigate("/admin/setup", { replace: true });
             } else {
+              // Admin already has society, go to dashboard
               navigate(redirectTo || "/admin/dashboard", { replace: true });
             }
           } catch (error) {
@@ -51,6 +53,7 @@ export default function AuthPage() {
         return;
       }
 
+      // For tenant users
       const checkTenantProfile = async () => {
         try {
           const { supabase } = await import('@/integrations/supabase/client');
@@ -62,8 +65,10 @@ export default function AuthPage() {
             .maybeSingle();
           
           if (!data?.society_id || !data?.flat_number) {
+            // Direct tenant to profile setup
             navigate("/tenant/setup", { replace: true });
           } else {
+            // Tenant profile complete, go to dashboard
             navigate(redirectTo || "/home", { replace: true });
           }
         } catch (error) {
@@ -101,7 +106,7 @@ export default function AuthPage() {
             Your community property and service management platform
           </p>
           <Badge variant={userType === "admin" ? "default" : "outline"} className="mb-2">
-            {userType === "admin" ? "Admin Sign In" : "Tenant Sign In"}
+            {userType === "admin" ? "Admin Access" : "Tenant Access"}
           </Badge>
           {isPreSignup && userType === "admin" && (
             <Badge variant="secondary" className="ml-2">

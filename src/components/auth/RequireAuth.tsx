@@ -25,7 +25,7 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
         toast.error("You don't have permission to access this area");
         navigate('/home', { replace: true });
       } else {
-        // Skip profile setup checks for auth, setup pages, and root landing page
+        // Skip profile setup checks for auth, setup, login pages, and root landing page
         if (location.pathname.includes('/auth') || 
             location.pathname.includes('/setup') ||
             location.pathname === '/' ||
@@ -49,9 +49,9 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
               return;
             }
             
-            // If everything is set up and user is on a setup page, redirect to home
+            // If everything is set up and user is on a setup page, redirect to appropriate dashboard
             if (location.pathname.includes('/setup')) {
-              navigate('/login', { replace: true });
+              navigate(isAdmin ? '/admin/dashboard' : '/home', { replace: true });
             }
             
           } catch (error) {

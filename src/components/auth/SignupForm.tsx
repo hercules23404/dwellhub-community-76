@@ -137,8 +137,10 @@ export function SignupForm({ onSwitchToLogin, userType, isPreSignup = false }: S
           // Clear the form data from session storage
           sessionStorage.removeItem(SOCIETY_FORM_DATA_KEY);
           
-          toast.success("Society created successfully! Redirecting to dashboard...");
-          navigate("/admin/dashboard");
+          toast.success("Society created successfully! Please log in.");
+          
+          // Redirect back to login instead of going directly to dashboard
+          navigate("/login");
         } catch (error: any) {
           console.error("Society creation error:", error);
           toast.error("Failed to create society: " + (error.message || "Unknown error"));
@@ -148,7 +150,9 @@ export function SignupForm({ onSwitchToLogin, userType, isPreSignup = false }: S
       } else {
         // For regular tenant signup
         toast.success("Account created successfully!");
-        navigate(userType === "admin" ? "/admin/setup" : "/tenant/setup");
+        
+        // Simply redirect to login page after signup
+        navigate("/login");
       }
     } catch (error: any) {
       console.error("Signup error:", error);

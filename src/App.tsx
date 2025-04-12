@@ -10,7 +10,6 @@ import { AdminProvider } from "@/contexts/AdminContext";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
-import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import NoticePage from "./pages/NoticePage";
 import PropertyPage from "./pages/PropertyPage";
@@ -62,7 +61,7 @@ const App = () => (
                 </RequireAuth>
               } />
               
-              {/* Protected Routes */}
+              {/* Protected Routes - Tenant Dashboard */}
               <Route path="/home" element={
                 <RequireAuth>
                   <HomePage />
@@ -104,7 +103,7 @@ const App = () => (
                 </RequireAuth>
               } />
               
-              {/* Admin Routes */}
+              {/* Admin Routes - Admin Dashboard */}
               <Route path="/admin/dashboard" element={
                 <RequireAuth requireAdmin={true}>
                   <AdminDashboardPage />

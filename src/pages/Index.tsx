@@ -69,14 +69,14 @@ export default function Index() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" className="group">
                 <Link to="/auth?type=tenant">
-                  Tenant Login
+                  Tenant Access
                   <Home className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
 
               <Button asChild size="lg" variant="secondary" className="group">
-                <Link to="/admin/presignup-setup">
-                  Admin Login
+                <Link to="/auth?type=admin">
+                  Admin Access
                   <ShieldCheck className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -144,7 +144,7 @@ export default function Index() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="group">
-                <Link to="/admin/presignup-setup">
+                <Link to="/auth?type=admin">
                   <ShieldCheck className="mr-2 h-4 w-4" />
                   Register Your Society
                 </Link>
