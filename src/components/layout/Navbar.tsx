@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@/components/auth/UserButton";
 import { useState, useEffect } from "react";
-import { Sparkles, User, Home } from "lucide-react";
+import { Sparkles, User, Home, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
@@ -13,7 +13,7 @@ interface NavbarProps {
 
 export function Navbar({ className }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,7 +41,7 @@ export function Navbar({ className }: NavbarProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link 
-            to="/home" 
+            to={isAdmin ? "/admin/dashboard" : "/home"}
             className="font-medium text-lg transition-all hover:opacity-80 flex items-center gap-2 group"
           >
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
@@ -62,7 +62,7 @@ export function Navbar({ className }: NavbarProps) {
         </div>
         
         <div className="flex items-center space-x-6">
-          {user && (
+          {user && !isAdmin && (
             <div className="hidden md:flex space-x-1">
               <Button variant="ghost" className="hover:bg-primary/10" asChild>
                 <Link to="/home">Home</Link>
@@ -79,16 +79,33 @@ export function Navbar({ className }: NavbarProps) {
             </div>
           )}
           
-          {/* New Home button added here */}
+          {user && isAdmin && (
+            <div className="hidden md:flex space-x-1">
+              <Button variant="ghost" className="hover:bg-primary/10" asChild>
+                <Link to="/admin/dashboard">Dashboard</Link>
+              </Button>
+              <Button variant="ghost" className="hover:bg-primary/10" asChild>
+                <Link to="/admin/properties">Properties</Link>
+              </Button>
+              <Button variant="ghost" className="hover:bg-primary/10" asChild>
+                <Link to="/admin/tenants">Tenants</Link>
+              </Button>
+              <Button variant="ghost" className="hover:bg-primary/10" asChild>
+                <Link to="/admin/notices">Notices</Link>
+              </Button>
+            </div>
+          )}
+          
+          {/* Dashboard button redirects based on role */}
           <Button 
             variant="outline" 
             size="icon" 
             className="mr-2" 
             asChild
-            title="Go to Home"
+            title={isAdmin ? "Admin Dashboard" : "Tenant Home"}
           >
-            <Link to="/home">
-              <Home className="h-4 w-4" />
+            <Link to={isAdmin ? "/admin/dashboard" : "/home"}>
+              {isAdmin ? <LayoutDashboard className="h-4 w-4" /> : <Home className="h-4 w-4" />}
             </Link>
           </Button>
           
