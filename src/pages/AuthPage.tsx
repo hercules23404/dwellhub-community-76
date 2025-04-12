@@ -15,60 +15,19 @@ export default function AuthPage() {
   // Redirect authenticated users appropriately
   useEffect(() => {
     if (user && !loading) {
-      const checkProfileSetup = async () => {
-        try {
-          const { data } = await supabase
-            .from('user_profiles')
-            .select('society_id')
-            .eq('id', user.id)
-            .maybeSingle();
-          
-          // Get intended redirect from URL params
-          const redirectTo = new URLSearchParams(location.search).get("redirect");
-          
-          // Always respect isAdmin flag from AuthContext
-          if (isAdmin) {
-            // Admin users
-            if (!data?.society_id) {
-              // Admin without society - go to setup
-              navigate("/admin/setup", { replace: true });
-            } else if (redirectTo) {
-              // Admin with redirect param
-              navigate(redirectTo, { replace: true });
-            } else {
-              // Admin with society, no redirect - go to dashboard
-              navigate("/admin/dashboard", { replace: true });
-            }
-          } else {
-            // Tenant users
-            if (!data?.society_id) {
-              // Tenant without society - go to setup
-              navigate("/tenant/setup", { replace: true });
-            } else if (redirectTo) {
-              // Tenant with redirect param
-              navigate(redirectTo, { replace: true });
-            } else {
-              // Tenant with society, no redirect - go to home
-              navigate("/home", { replace: true });
-            }
-          }
-        } catch (error) {
-          console.error("Error checking profile setup:", error);
-          
-          // Fallback redirect if profile check fails - respect isAdmin flag
-          const fallbackRedirect = new URLSearchParams(location.search).get("redirect") || 
-                      (isAdmin ? "/admin/dashboard" : "/home");
-          
-          // If no society is set up yet, redirect to appropriate setup page
-          if (isAdmin) {
-            navigate("/admin/setup", { replace: true });
-          } else {
-            navigate("/tenant/setup", { replace: true });
-          }
-        }
-      };
-      
-      checkProfileSetup();
+      // For admin users, always redirect to admin setup or admin dashboard
+      if (isAdmin) {
+        navigate("/admin/setup", { replace: true });
+        return;
+      }
+
+      // For tenant users
+      const redirectTo = new URLSearchParams(location.search).get("redirect");
+      if (redirectTo) {
+        navigate(redirectTo, { replace: true });
+      } else {
+        navigate("/tenant/setup", { replace: true });
+      }
     }
   }, [user, loading, isAdmin, navigate, location.search]);
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -18,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdmin } from "@/contexts/AdminContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LoginFormProps {
   className?: string;
@@ -49,6 +49,7 @@ export function LoginForm({ className }: LoginFormProps) {
   const [phone, setPhone] = useState("");
   const navigate = useNavigate();
   const { login } = useAdmin();
+  const { isAdmin: authIsAdmin } = useAuth();
 
   useEffect(() => {
     // Update login type based on URL parameter when component loads
@@ -102,18 +103,8 @@ export function LoginForm({ className }: LoginFormProps) {
           login(true);
           toast.success("Admin login successful!");
           
-          // Explicitly check if admin has a society and redirect accordingly
-          const { data: profileData } = await supabase
-            .from('user_profiles')
-            .select('society_id')
-            .eq('id', data.user.id)
-            .maybeSingle();
-            
-          if (!profileData?.society_id) {
-            navigate("/admin/setup");
-          } else {
-            navigate("/admin/dashboard");
-          }
+          // Explicitly redirect admin users to setup page
+          navigate("/admin/setup");
         } else {
           login(false);
           toast.success("Login successful!");
@@ -123,6 +114,7 @@ export function LoginForm({ className }: LoginFormProps) {
         // Register - will redirect to society setup or society selection
         if (!firstName || !lastName || !email || !password) {
           toast.error("Please fill in all required fields");
+          setIsLoading(false);
           return;
         }
         
@@ -134,6 +126,7 @@ export function LoginForm({ className }: LoginFormProps) {
         
         if (existingUser?.user) {
           toast.error("An account with this email already exists");
+          setIsLoading(false);
           return;
         }
         
@@ -156,6 +149,7 @@ export function LoginForm({ className }: LoginFormProps) {
           } else {
             toast.error(error.message);
           }
+          setIsLoading(false);
           return;
         }
         

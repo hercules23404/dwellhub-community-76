@@ -22,15 +22,15 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
         // Redirect to home if admin access is required but user is not admin
         navigate('/home', { replace: true });
       } else {
+        // Skip profile setup checks for auth and setup pages
+        if (location.pathname.includes('/auth') || 
+            location.pathname.includes('/setup') ||
+            location.pathname === '/') {
+          return;
+        }
+        
         // Check if the user needs to complete profile setup
         const checkProfileSetup = async () => {
-          // Skip for auth and setup pages
-          if (location.pathname.includes('/auth') || 
-              location.pathname.includes('/setup') ||
-              location.pathname === '/') {
-            return;
-          }
-          
           try {
             const { supabase } = await import('@/integrations/supabase/client');
             const { data } = await supabase
@@ -38,6 +38,16 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
               .select('society_id, flat_number')
               .eq('id', user.id)
               .maybeSingle();
+            
+            if (!data) {
+              // No profile data - redirect to appropriate setup
+              if (isAdmin) {
+                navigate('/admin/setup', { replace: true });
+              } else {
+                navigate('/tenant/setup', { replace: true });
+              }
+              return;
+            }
             
             // For admin users, redirect to admin setup if no society is set
             if (isAdmin && !data?.society_id && !location.pathname.includes('/admin/setup')) {
@@ -51,6 +61,13 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
             }
           } catch (error) {
             console.error("Error checking profile setup:", error);
+            
+            // Fallback - on error, direct to setup pages
+            if (isAdmin) {
+              navigate('/admin/setup', { replace: true });
+            } else {
+              navigate('/tenant/setup', { replace: true });
+            }
           }
         };
         
