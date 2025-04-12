@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,7 @@ export function LoginForm({ onSwitchToSignup, userType }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [loginType, setLoginType] = useState<"tenant" | "admin">(userType as "tenant" | "admin");
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {

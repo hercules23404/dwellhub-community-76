@@ -69,6 +69,17 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
             navigate(dashboardPath, { replace: true });
           }
           
+          // If user is an admin and trying to access tenant routes, redirect to admin dashboard
+          if (isAdmin && !location.pathname.includes('/admin') && !location.pathname.includes('/setup')) {
+            navigate('/admin/dashboard', { replace: true });
+          }
+          
+          // If user is a tenant and trying to access admin routes, redirect to home
+          if (!isAdmin && location.pathname.includes('/admin')) {
+            toast.error("You don't have permission to access admin pages");
+            navigate('/home', { replace: true });
+          }
+          
         } catch (error) {
           console.error("Error checking profile setup:", error);
           const setupPath = isAdmin ? '/admin/setup' : '/tenant/setup';
