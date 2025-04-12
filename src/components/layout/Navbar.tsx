@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@/components/auth/UserButton";
 import { useState, useEffect } from "react";
-import { Sparkles, User } from "lucide-react";
+import { Sparkles, User, Home } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
@@ -78,6 +78,20 @@ export function Navbar({ className }: NavbarProps) {
               </Button>
             </div>
           )}
+          
+          {/* New Home button added here */}
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="mr-2" 
+            asChild
+            title="Go to Home"
+          >
+            <Link to="/home">
+              <Home className="h-4 w-4" />
+            </Link>
+          </Button>
+          
           <UserButton />
         </div>
       </div>
