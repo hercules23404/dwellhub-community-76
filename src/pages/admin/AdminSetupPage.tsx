@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Container } from "@/components/ui/Container";
 import { SocietySetupForm } from "@/components/admin/SocietySetupForm";
 import { toast } from "sonner";
-import { Buildings } from "lucide-react";
+import { Building } from "lucide-react";
 
 export default function AdminSetupPage() {
   const { user, signOut } = useAuth();
@@ -24,7 +24,7 @@ export default function AdminSetupPage() {
       <Container maxWidth="lg" className="py-10 px-4">
         <div className="mb-8 flex items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Buildings className="h-6 w-6 text-primary" />
+            <Building className="h-6 w-6 text-primary" />
           </div>
           <div>
             <h1 className="text-3xl font-bold">Admin Society Setup</h1>
@@ -35,7 +35,7 @@ export default function AdminSetupPage() {
         </div>
         
         <div className="max-w-3xl mx-auto">
-          <SocietySetupForm onComplete={handleSetupComplete} />
+          <SocietySetupForm onSubmit={handleSetupComplete} />
         </div>
       </Container>
     </div>

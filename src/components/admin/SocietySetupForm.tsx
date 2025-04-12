@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +47,6 @@ export function SocietySetupForm({
     numFlats: initialData?.numFlats || 0
   });
   
-  // For adding new amenities and workers
   const [newAmenity, setNewAmenity] = useState("");
   const [newWorkerName, setNewWorkerName] = useState("");
   const [newWorkerContact, setNewWorkerContact] = useState("");
