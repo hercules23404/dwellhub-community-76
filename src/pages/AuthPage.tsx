@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Container } from "@/components/ui/Container";
@@ -12,6 +13,7 @@ export default function AuthPage() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("type") || "tenant";
+  const isPreSignup = searchParams.get("presignup") === "true";
 
   useEffect(() => {
     if (user && !loading) {
@@ -101,6 +103,11 @@ export default function AuthPage() {
           <Badge variant={userType === "admin" ? "default" : "outline"} className="mb-2">
             {userType === "admin" ? "Admin Sign In" : "Tenant Sign In"}
           </Badge>
+          {isPreSignup && userType === "admin" && (
+            <Badge variant="secondary" className="ml-2">
+              Step 2: Complete Society Setup
+            </Badge>
+          )}
         </div>
         <div className="w-full max-w-md p-1 gradient-border rounded-xl">
           <AuthForm userType={userType} />

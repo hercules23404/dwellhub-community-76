@@ -19,12 +19,19 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
       if (!user) {
         // Get the current user type (admin or tenant) from path
         const isAdminPath = location.pathname.includes('/admin');
-        // Redirect to auth page with appropriate type parameter
-        const authPath = isAdminPath 
-          ? `/auth?type=admin&redirect=${encodeURIComponent(location.pathname)}`
-          : `/auth?redirect=${encodeURIComponent(location.pathname)}`;
         
-        navigate(authPath, { replace: true });
+        // If this is an admin path and we're using the new flow, direct to pre-signup
+        if (isAdminPath && location.pathname !== '/admin/setup' && location.pathname !== '/admin/presignup-setup') {
+          const authPath = `/auth?type=admin&redirect=${encodeURIComponent(location.pathname)}`;
+          navigate(authPath, { replace: true });
+        } else {
+          // Use regular auth flow
+          const authPath = isAdminPath 
+            ? `/auth?type=admin&redirect=${encodeURIComponent(location.pathname)}`
+            : `/auth?redirect=${encodeURIComponent(location.pathname)}`;
+          
+          navigate(authPath, { replace: true });
+        }
       } else if (requireAdmin && !isAdmin) {
         // Unauthorized access attempt - redirect to tenant home
         toast.error("You don't have permission to access this area");
@@ -68,13 +75,22 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
               return;
             }
             
-            // For admin users, always redirect to admin setup if no society is set
-            if (isAdmin && !data?.society_id) {
-              navigate('/admin/setup', { replace: true });
-              return;
-            }
+            // For admin users, check if they have created a society
+            if (isAdmin) {
+              const { data: societyData } = await supabase
+                .from('societies')
+                .select('id')
+                .eq('created_by', user.id)
+                .maybeSingle();
+                
+              // If admin has no society linked in profile and hasn't created one, redirect to setup
+              if (!data?.society_id && !societyData?.id) {
+                navigate('/admin/setup', { replace: true });
+                return;
+              }
+            } 
             // For tenant users, redirect to tenant setup if no society is set
-            else if (!isAdmin && !data?.society_id) {
+            else if (!data?.society_id) {
               navigate('/tenant/setup', { replace: true });
               return;
             }
@@ -107,7 +123,7 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
         checkProfileSetup();
       }
     }
-  }, [user, loading, isAdmin, navigate, location.pathname, requireAdmin]);
+  }, [user, loading, isAdmin, navigate, location.pathname, requireAdmin, location.search]);
 
   // Show nothing while checking auth state
   if (loading || !user || (requireAdmin && !isAdmin)) {

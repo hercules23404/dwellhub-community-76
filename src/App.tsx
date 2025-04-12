@@ -27,6 +27,7 @@ import AdminServicesPage from "./pages/admin/AdminServicesPage";
 import AdminNoticesPage from "./pages/admin/AdminNoticesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSetupPage from "./pages/admin/AdminSetupPage";
+import PreSignupSocietySetupPage from "./pages/admin/PreSignupSocietySetupPage";
 import AdminMaintenancePage from "./pages/admin/AdminMaintenancePage";
 import TenantSetupPage from "./pages/tenant/TenantSetupPage";
 
@@ -41,9 +42,12 @@ const App = () => (
             <Toaster />
             <Sonner />
             <Routes>
-              <Route path="/" element={<Index />} /> {/* Updated root route */}
+              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/login" element={<Navigate to="/auth" replace />} />
+              
+              {/* Public Admin Pre-Signup Flow */}
+              <Route path="/admin/presignup-setup" element={<PreSignupSocietySetupPage />} />
               
               {/* Setup Routes */}
               <Route path="/admin/setup" element={
