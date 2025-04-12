@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { Sparkles } from "lucide-react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AuthPage() {
   const { user, loading, isAdmin } = useAuth();
@@ -14,10 +15,53 @@ export default function AuthPage() {
   // Redirect authenticated users appropriately
   useEffect(() => {
     if (user && !loading) {
-      // Get intended redirect from URL params or default based on user role
-      const redirectTo = new URLSearchParams(location.search).get("redirect") || 
-                         (isAdmin ? "/admin/dashboard" : "/home");
-      navigate(redirectTo, { replace: true });
+      const checkProfileSetup = async () => {
+        try {
+          const { data } = await supabase
+            .from('user_profiles')
+            .select('society_id')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          // Get intended redirect from URL params
+          const redirectTo = new URLSearchParams(location.search).get("redirect");
+          
+          if (isAdmin) {
+            // Admin users
+            if (!data?.society_id) {
+              // Admin without society - go to setup
+              navigate("/admin/setup", { replace: true });
+            } else if (redirectTo) {
+              // Admin with redirect param
+              navigate(redirectTo, { replace: true });
+            } else {
+              // Admin with society, no redirect - go to dashboard
+              navigate("/admin/dashboard", { replace: true });
+            }
+          } else {
+            // Tenant users
+            if (!data?.society_id) {
+              // Tenant without society - go to setup
+              navigate("/tenant/setup", { replace: true });
+            } else if (redirectTo) {
+              // Tenant with redirect param
+              navigate(redirectTo, { replace: true });
+            } else {
+              // Tenant with society, no redirect - go to home
+              navigate("/home", { replace: true });
+            }
+          }
+        } catch (error) {
+          console.error("Error checking profile setup:", error);
+          
+          // Fallback redirect if profile check fails
+          const fallbackRedirect = new URLSearchParams(location.search).get("redirect") || 
+                      (isAdmin ? "/admin/dashboard" : "/home");
+          navigate(fallbackRedirect, { replace: true });
+        }
+      };
+      
+      checkProfileSetup();
     }
   }, [user, loading, isAdmin, navigate, location.search]);
 

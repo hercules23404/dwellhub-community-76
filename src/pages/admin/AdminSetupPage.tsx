@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export default function AdminSetupPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [existingSociety, setExistingSociety] = useState<any>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -25,6 +26,33 @@ export default function AdminSetupPage() {
     utilityWorkers: "",
     numFlats: 0
   });
+
+  // Check if admin has already created a society
+  useEffect(() => {
+    const checkExistingSociety = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('societies')
+          .select('*')
+          .eq('created_by', user.id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setExistingSociety(data);
+          toast.info("You've already created a society. You can manage it from your dashboard.");
+          navigate("/admin/dashboard");
+        }
+      } catch (error: any) {
+        console.error("Error checking existing society:", error);
+      }
+    };
+    
+    checkExistingSociety();
+  }, [user, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -104,6 +132,9 @@ export default function AdminSetupPage() {
       setIsLoading(false);
     }
   };
+
+  // If already redirecting to dashboard due to existing society, don't render the form
+  if (existingSociety) return null;
 
   return (
     <div className="min-h-screen bg-background">

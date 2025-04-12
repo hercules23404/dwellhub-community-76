@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
@@ -100,14 +99,12 @@ export function AuthForm() {
 
       toast.success("Registration successful!");
       
-      // For admins, redirect to login tab for immediate login
+      // For admins, redirect to admin setup page
       if (isAdminSignup) {
-        setTab("login");
-        loginForm.setValue("email", data.email);
-        toast.info("Please log in with your new admin credentials");
+        navigate("/admin/setup");
       } else {
-        // For regular users, just display a message
-        toast.info("Please check your email for verification if required.");
+        // For tenants, redirect to tenant setup page
+        navigate("/tenant/setup");
       }
     } catch (error: any) {
       console.error("Signup error:", error);

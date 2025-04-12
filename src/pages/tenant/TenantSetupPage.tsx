@@ -33,27 +33,54 @@ export default function TenantSetupPage() {
   });
 
   useEffect(() => {
-    // Fetch available societies
-    const fetchSocieties = async () => {
+    // First check if tenant already has a society assigned
+    const checkExistingProfile = async () => {
+      if (!user) return;
+      
       try {
         const { data, error } = await supabase
-          .from('societies')
-          .select('id, name')
-          .order('name');
+          .from('user_profiles')
+          .select('society_id, flat_number')
+          .eq('id', user.id)
+          .maybeSingle();
           
         if (error) throw error;
         
-        setSocieties(data || []);
+        if (data?.society_id && data?.flat_number) {
+          // User already has completed setup
+          toast.info("Your profile is already set up.");
+          navigate("/home");
+          return;
+        }
       } catch (error) {
-        console.error("Error fetching societies:", error);
-        toast.error("Failed to load available societies");
-      } finally {
-        setFetchingSocieties(false);
+        console.error("Error checking profile:", error);
       }
+      
+      // Fetch societies for selection
+      fetchSocieties();
     };
     
-    fetchSocieties();
-  }, []);
+    checkExistingProfile();
+  }, [user, navigate]);
+
+  // Fetch available societies
+  const fetchSocieties = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('societies')
+        .select('id, name')
+        .order('name');
+        
+      if (error) throw error;
+      
+      setSocieties(data || []);
+    } catch (error) {
+      console.error("Error fetching societies:", error);
+      toast.error("Failed to load available societies");
+    } finally {
+      setFetchingSocieties(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
