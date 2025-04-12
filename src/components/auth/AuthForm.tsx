@@ -12,7 +12,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 // Form schema for login
 const loginSchema = z.object({
@@ -32,7 +31,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function AuthForm() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -66,35 +65,16 @@ export function AuthForm() {
     setIsLoading(true);
     
     try {
-      // Fix: Ensure we pass the required email and password fields
       await signIn({
         email: data.email,
         password: data.password
       });
       
-      // Check if user is admin and redirect accordingly
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-      
-      if (roleData?.role === 'admin') {
+      // Redirect based on user role - this now uses the isAdmin state from AuthContext
+      if (isAdmin) {
         navigate('/admin/dashboard');
       } else {
-        // For regular users, check if they need to complete profile
-        const { data: profileData } = await supabase
-          .from('user_profiles')
-          .select('society_id, flat_number')
-          .eq('id', (await supabase.auth.getUser()).data.user?.id)
-          .single();
-        
-        if (profileData?.society_id) {
-          navigate('/home');
-        } else {
-          // Redirect to tenant setup if not a member of any society
-          navigate('/tenant/setup');
-        }
+        navigate('/home');
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to log in");
@@ -108,8 +88,8 @@ export function AuthForm() {
     setIsLoading(true);
 
     try {
-      // First check the user type from URL
-      const isAdmin = new URLSearchParams(location.search).get("type") === "admin";
+      // Check if signing up as admin
+      const isAdminSignup = new URLSearchParams(location.search).get("type") === "admin";
       
       // Register the new user
       await signUp({
@@ -117,16 +97,14 @@ export function AuthForm() {
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
+        tenantStatus: isAdminSignup ? "admin" : "tenant"
       });
 
       toast.success("Registration successful! Please check your email for verification.");
-
-      // Redirect to appropriate setup page based on user type
-      if (isAdmin) {
-        navigate('/admin/setup');
-      } else {
-        navigate('/tenant/setup');
-      }
+      
+      // Redirect to login tab
+      setTab("login");
+      toast.info("Please log in with your new credentials");
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");
     } finally {

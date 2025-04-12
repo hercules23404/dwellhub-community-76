@@ -7,18 +7,19 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirect authenticated users to home
+  // Redirect authenticated users appropriately
   useEffect(() => {
     if (user && !loading) {
-      // Redirect to home page or intended page
-      const redirectTo = new URLSearchParams(location.search).get("redirect") || "/home";
+      // Get intended redirect from URL params or default based on user role
+      const redirectTo = new URLSearchParams(location.search).get("redirect") || 
+                         (isAdmin ? "/admin/dashboard" : "/home");
       navigate(redirectTo, { replace: true });
     }
-  }, [user, loading, navigate, location.search]);
+  }, [user, loading, isAdmin, navigate, location.search]);
 
   // Don't render anything while checking authentication
   if (loading) return null;

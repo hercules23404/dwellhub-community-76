@@ -1,7 +1,6 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAdmin } from "@/contexts/AdminContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { AdminHeader } from "@/components/admin/AdminHeader";
@@ -9,8 +8,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminUserManagement } from "@/components/admin/AdminUserManagement";
 
 export default function AdminUsersPage() {
-  const { user } = useAuth();
-  const { isAdmin } = useAdmin();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
