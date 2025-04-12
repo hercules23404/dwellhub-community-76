@@ -26,11 +26,13 @@ export function ProfileHeader() {
       const fetchProfileData = async () => {
         try {
           // Get basic user info from user_profiles
-          const { data: profileData, error: profileError } = await supabase
+          const { data: initialProfileData, error: profileError } = await supabase
             .from('user_profiles')
             .select('*, societies(name)')
             .eq('id', user.id)
             .single();
+
+          let finalProfileData = initialProfileData;
 
           if (profileError) {
             console.error("Error fetching profile:", profileError);
@@ -45,7 +47,7 @@ export function ProfileHeader() {
             if (oldProfileError) throw oldProfileError;
             
             // Use old profiles data
-            profileData = oldProfileData;
+            finalProfileData = oldProfileData;
           }
 
           // Get role info
@@ -62,15 +64,15 @@ export function ProfileHeader() {
           const formattedDate = joinDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
 
           setProfileData({
-            firstName: profileData?.first_name || user?.user_metadata?.first_name || "",
-            lastName: profileData?.last_name || user?.user_metadata?.last_name || "",
+            firstName: finalProfileData?.first_name || user?.user_metadata?.first_name || "",
+            lastName: finalProfileData?.last_name || user?.user_metadata?.last_name || "",
             email: user.email || "",
             role: roleData?.role ? (roleData.role.charAt(0).toUpperCase() + roleData.role.slice(1)) : "Tenant",
             joinDate: formattedDate,
-            avatar: profileData?.avatar_url || "/placeholder.svg",
-            bio: profileData?.bio || user?.user_metadata?.bio || "",
-            societyName: profileData?.societies?.name || "",
-            flatNumber: profileData?.flat_number || ""
+            avatar: finalProfileData?.avatar_url || "/placeholder.svg",
+            bio: finalProfileData?.bio || user?.user_metadata?.bio || "",
+            societyName: finalProfileData?.societies?.name || "",
+            flatNumber: finalProfileData?.flat_number || ""
           });
         } catch (error) {
           console.error("Error fetching profile data:", error);
