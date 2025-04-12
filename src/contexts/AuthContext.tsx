@@ -20,6 +20,7 @@ type AuthContextType = {
   signIn: (data: { email: string; password: string }) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  isAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener first
@@ -39,8 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Only display toast for intentional actions
         if (event === 'SIGNED_IN' && !loading) {
           toast.success("Successfully signed in");
+          // Check user role on sign in
+          checkUserRole(session?.user?.id);
         } else if (event === 'SIGNED_OUT' && !loading) {
           toast.success("Successfully signed out");
+          setIsAdmin(false);
         }
       }
     );
@@ -49,6 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      // Check user role on initial load
+      checkUserRole(session?.user?.id);
       setLoading(false);
     });
 
@@ -56,6 +63,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Function to check if user is admin
+  const checkUserRole = async (userId: string | undefined) => {
+    if (!userId) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setIsAdmin(data?.role === 'admin');
+    } catch (error) {
+      console.error("Error checking user role:", error);
+      setIsAdmin(false);
+    }
+  };
 
   // Sign up function with expanded profile data
   const signUp = async ({ 
@@ -89,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // If we get here, the email doesn't exist, so proceed with signup
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -110,7 +139,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           throw error;
         }
-      } else {
+      } else if (data.user) {
+        // Create user profile in the database
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: data.user.id,
+            first_name: firstName,
+            last_name: lastName,
+            bio: bio || null,
+            phone_number: phoneNumber || null
+          });
+
+        if (profileError) throw profileError;
+
+        // Determine if the user is registering as admin (from URL parameter)
+        const urlParams = new URLSearchParams(window.location.search);
+        const userType = urlParams.get('type');
+
+        // Create user role entry
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: data.user.id,
+            role: userType === 'admin' ? 'admin' : 'tenant'
+          });
+
+        if (roleError) throw roleError;
+
         toast.success("Registration successful! Please check your email to verify your account.");
       }
     } catch (error: any) {
@@ -130,6 +186,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) throw error;
+      
+      // Check if user is admin after login
+      const { data: user } = await supabase.auth.getUser();
+      if (user) {
+        checkUserRole(user.user?.id);
+      }
     } catch (error: any) {
       toast.error(error.message || "Invalid login credentials");
       throw error;
@@ -141,6 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      setIsAdmin(false);
     } catch (error: any) {
       toast.error(error.message || "Error signing out");
       throw error;
@@ -173,6 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signOut,
         resetPassword,
+        isAdmin
       }}
     >
       {children}

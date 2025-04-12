@@ -27,12 +27,32 @@ export function PersonalInfoForm() {
       const fetchProfileData = async () => {
         try {
           const { data: profileData, error } = await supabase
-            .from('profiles')
+            .from('user_profiles')
             .select('*')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
-          if (error) throw error;
+          if (error) {
+            // Fallback to profiles table if user_profiles doesn't have data
+            const { data: oldProfileData, error: oldProfileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .maybeSingle();
+              
+            if (oldProfileError) throw oldProfileError;
+            
+            // Use old profiles data
+            setFormData({
+              firstName: oldProfileData?.first_name || user?.user_metadata?.first_name || "",
+              lastName: oldProfileData?.last_name || user?.user_metadata?.last_name || "",
+              displayName: `${oldProfileData?.first_name || user?.user_metadata?.first_name || ""} ${oldProfileData?.last_name || user?.user_metadata?.last_name || ""}`,
+              email: user.email || "",
+              phone: oldProfileData?.phone_number || user?.user_metadata?.phone_number || "",
+              bio: oldProfileData?.bio || user?.user_metadata?.bio || ""
+            });
+            return;
+          }
 
           setFormData({
             firstName: profileData?.first_name || user?.user_metadata?.first_name || "",
@@ -53,10 +73,23 @@ export function PersonalInfoForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
-    setFormData({
-      ...formData,
-      [id]: value
-    });
+    
+    if (id === 'firstName' || id === 'lastName') {
+      // Update display name when first or last name changes
+      const updatedFirstName = id === 'firstName' ? value : formData.firstName;
+      const updatedLastName = id === 'lastName' ? value : formData.lastName;
+      
+      setFormData({
+        ...formData,
+        [id]: value,
+        displayName: `${updatedFirstName} ${updatedLastName}`.trim()
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [id]: value
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,18 +99,45 @@ export function PersonalInfoForm() {
     setLoading(true);
     
     try {
-      // Update the profile in Supabase
+      // Update the profile in user_profiles table
       const { error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update({
           first_name: formData.firstName,
           last_name: formData.lastName,
           phone_number: formData.phone,
-          bio: formData.bio
+          bio: formData.bio,
+          updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        // Try to update the old profiles table as fallback
+        const { error: oldError } = await supabase
+          .from('profiles')
+          .update({
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone_number: formData.phone,
+            bio: formData.bio,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+          
+        if (oldError) throw oldError;
+      }
+      
+      // Also update user metadata
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          bio: formData.bio,
+          phone_number: formData.phone
+        }
+      });
+      
+      if (metadataError) throw metadataError;
       
       toast.success("Profile updated successfully");
     } catch (error) {

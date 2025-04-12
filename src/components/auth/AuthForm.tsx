@@ -1,54 +1,45 @@
 
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
-// Define schemas for form validation
+// Form schema for login
 const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-const registerSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-  firstName: z.string().min(2, { message: "First name is required." }),
-  lastName: z.string().min(2, { message: "Last name is required." }),
-  phoneNumber: z.string().optional(),
-  bio: z.string().optional(),
-  tenantStatus: z.string().optional(),
+// Form schema for signup
+const signupSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function AuthForm() {
-  const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/home";
-  const defaultTab = searchParams.get("tab") || "login";
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"login" | "register">(defaultTab === "register" ? "register" : "login");
-  const [step, setStep] = useState(1);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [tab, setTab] = useState<"login" | "signup">(
+    new URLSearchParams(location.search).get("type") === "admin" ? "login" : "signup"
+  );
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -59,102 +50,104 @@ export function AuthForm() {
     },
   });
 
-  // Register form
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+  // Signup form
+  const signupForm = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
-      email: "",
-      password: "",
       firstName: "",
       lastName: "",
-      phoneNumber: "",
-      bio: "",
-      tenantStatus: "tenant",
+      email: "",
+      password: "",
     },
   });
 
-  // Handle login form submission
+  // Handle login submission
   const onLoginSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
+    
     try {
-      await signIn({
-        email: data.email,
-        password: data.password,
-      });
-      navigate(redirectTo);
-    } catch (error) {
-      console.error("Login error:", error);
+      await signIn(data);
+      
+      // Check if user is admin and redirect accordingly
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+      
+      if (roleData?.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        // For regular users, check if they need to complete profile
+        const { data: profileData } = await supabase
+          .from('user_profiles')
+          .select('society_id, flat_number')
+          .eq('id', (await supabase.auth.getUser()).data.user?.id)
+          .single();
+        
+        if (profileData?.society_id) {
+          navigate('/home');
+        } else {
+          // Redirect to tenant setup if not a member of any society
+          navigate('/tenant/setup');
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to log in");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle registration form submission step 1
-  const onRegisterStep1Submit = () => {
-    // Validate only email and password fields
-    const { email, password } = registerForm.getValues();
-    const isValid = email && password && 
-      email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) && 
-      password.length >= 6;
-    
-    if (isValid) {
-      setStep(2);
-    } else {
-      if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-        registerForm.setError("email", { 
-          type: "manual", 
-          message: "Please enter a valid email address." 
-        });
-      }
-      
-      if (!password || password.length < 6) {
-        registerForm.setError("password", { 
-          type: "manual", 
-          message: "Password must be at least 6 characters." 
-        });
-      }
-    }
-  };
-
-  // Handle registration form submission step 2
-  const onRegisterSubmit = async (data: RegisterFormValues) => {
+  // Handle signup submission
+  const onSignupSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
+
     try {
+      // First check the user type from URL
+      const isAdmin = new URLSearchParams(location.search).get("type") === "admin";
+      
+      // Register the new user
       await signUp({
         email: data.email,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
-        phoneNumber: data.phoneNumber || undefined,
-        bio: data.bio || undefined,
-        tenantStatus: data.tenantStatus || 'tenant'
       });
-      // Note: Normally we'd navigate to the home page here, but with Supabase email confirmation
-      // we may want to show a "check your email" message instead
-      navigate("/auth", { state: { message: "Please check your email to confirm your account." } });
-    } catch (error) {
-      console.error("Registration error:", error);
+
+      toast.success("Registration successful! Please check your email for verification.");
+
+      // Redirect to appropriate setup page based on user type
+      if (isAdmin) {
+        navigate('/admin/setup');
+      } else {
+        navigate('/tenant/setup');
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sign up");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "register")}>
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="login">Sign In</TabsTrigger>
-        <TabsTrigger value="register">Register</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="login">
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>Enter your email and password to access your account</CardDescription>
-          </CardHeader>
-          <CardContent>
+    <Card className="w-full bg-card">
+      <CardHeader>
+        <CardTitle className="text-2xl text-center">Welcome</CardTitle>
+        <CardDescription className="text-center">
+          {tab === "login" ? "Sign in to your account" : "Create a new account"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue={tab} value={tab} onValueChange={(v) => setTab(v as "login" | "signup")}>
+          <TabsList className="grid grid-cols-2 mb-8">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login">
             <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
                 <FormField
                   control={loginForm.control}
                   name="email"
@@ -162,12 +155,18 @@ export function AuthForm() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="name@example.com" {...field} />
+                        <Input 
+                          type="email" 
+                          placeholder="you@example.com" 
+                          disabled={isLoading}
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={loginForm.control}
                   name="password"
@@ -175,200 +174,145 @@ export function AuthForm() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input 
+                          type="password" 
+                          placeholder="••••••••" 
+                          disabled={isLoading}
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing In..." : "Sign In"}
+                
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
                 </Button>
               </form>
             </Form>
-          </CardContent>
-          <CardFooter className="flex justify-center border-t pt-4">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Button 
-                variant="link" 
-                className="p-0" 
-                onClick={() => setActiveTab("register")}
-              >
-                Register
-              </Button>
-            </p>
-          </CardFooter>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="register">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create Account</CardTitle>
-            <CardDescription>
-              {step === 1 
-                ? "Enter your email and create a password" 
-                : "Complete your profile information"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...registerForm}>
-              <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                {step === 1 ? (
-                  <>
-                    <FormField
-                      control={registerForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="name@example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button 
-                      type="button" 
-                      className="w-full" 
-                      onClick={onRegisterStep1Submit}
-                      disabled={isLoading}
-                    >
-                      Next
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={registerForm.control}
-                        name="firstName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>First Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="John" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="lastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Last Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Doe" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormField
-                      control={registerForm.control}
-                      name="phoneNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number (optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="+1 (555) 123-4567" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="tenantStatus"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>I am a</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select your status" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="tenant">Tenant</SelectItem>
-                              <SelectItem value="property_owner">Property Owner</SelectItem>
-                              <SelectItem value="property_manager">Property Manager</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="bio"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bio (optional)</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Tell us a little about yourself" 
-                              className="resize-none" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="flex flex-col gap-2">
-                      <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Creating Account..." : "Create Account"}
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setStep(1)}
-                      >
-                        Back
-                      </Button>
-                    </div>
-                  </>
-                )}
+          </TabsContent>
+          
+          <TabsContent value="signup">
+            <Form {...signupForm}>
+              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={signupForm.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John" disabled={isLoading} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={signupForm.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Doe" disabled={isLoading} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={signupForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email" 
+                          placeholder="you@example.com" 
+                          disabled={isLoading}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={signupForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password" 
+                          placeholder="••••••••" 
+                          disabled={isLoading}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create account"
+                  )}
+                </Button>
               </form>
             </Form>
-          </CardContent>
-          <CardFooter className="flex justify-center border-t pt-4">
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Button 
-                variant="link" 
-                className="p-0" 
-                onClick={() => setActiveTab("login")}
-              >
-                Sign In
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+      <CardFooter className="justify-center">
+        <p className="text-sm text-muted-foreground">
+          {tab === "login" ? (
+            <>
+              Don't have an account?{" "}
+              <Button variant="link" className="p-0" onClick={() => setTab("signup")}>
+                Sign up
               </Button>
-            </p>
-          </CardFooter>
-        </Card>
-      </TabsContent>
-    </Tabs>
+            </>
+          ) : (
+            <>
+              Already have an account?{" "}
+              <Button variant="link" className="p-0" onClick={() => setTab("login")}>
+                Log in
+              </Button>
+            </>
+          )}
+        </p>
+      </CardFooter>
+    </Card>
   );
 }

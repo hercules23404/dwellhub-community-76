@@ -1,84 +1,66 @@
 
-import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAdmin } from "@/contexts/AdminContext";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
-export function RequireAuth({ 
-  children, 
-  requireAdmin = false 
-}: { 
-  children: JSX.Element, 
-  requireAdmin?: boolean 
-}) {
-  const { user, loading } = useAuth();
-  const { isAdmin, login } = useAdmin();
+interface RequireAuthProps {
+  children: React.ReactNode;
+  requireAdmin?: boolean;
+}
+
+export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps) {
+  const { user, loading, isAdmin } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
-  const [checkingAdmin, setCheckingAdmin] = useState(requireAdmin);
 
   useEffect(() => {
-    if (!loading && !user) {
-      toast.error("Please sign in to access this page");
-    }
-  }, [user, loading]);
-
-  // Check admin status if needed
-  useEffect(() => {
-    if (requireAdmin && user && !isAdmin) {
-      const checkAdminStatus = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-            .eq('role', 'admin')
-            .maybeSingle();
-            
-          if (error) throw error;
-          
-          // If we found an admin role, update the admin context
-          if (data) {
-            login(true);
-          } else if (location.pathname.includes('/admin')) {
-            toast.error("You don't have permission to access the admin area");
-            setCheckingAdmin(false);
+    if (!loading) {
+      if (!user) {
+        // Redirect to auth page if not logged in
+        navigate(`/auth?redirect=${encodeURIComponent(location.pathname)}`, { replace: true });
+      } else if (requireAdmin && !isAdmin) {
+        // Redirect to home if admin access is required but user is not admin
+        navigate('/home', { replace: true });
+      } else {
+        // Check if the user needs to complete profile setup
+        const checkProfileSetup = async () => {
+          // Skip for auth and setup pages
+          if (location.pathname.includes('/auth') || 
+              location.pathname.includes('/setup') ||
+              location.pathname === '/') {
+            return;
           }
-        } catch (error) {
-          console.error("Error checking admin status:", error);
-        } finally {
-          setCheckingAdmin(false);
-        }
-      };
-      
-      checkAdminStatus();
-    } else {
-      setCheckingAdmin(false);
+          
+          try {
+            const { supabase } = await import('@/integrations/supabase/client');
+            const { data } = await supabase
+              .from('user_profiles')
+              .select('society_id, flat_number')
+              .eq('id', user.id)
+              .maybeSingle();
+            
+            // For admin users, redirect to admin setup if no society is set
+            if (isAdmin && !data?.society_id && !location.pathname.includes('/admin/setup')) {
+              navigate('/admin/setup', { replace: true });
+            }
+            // For tenant users, redirect to tenant setup if no society is set
+            else if (!isAdmin && !data?.society_id && !location.pathname.includes('/tenant/setup')) {
+              navigate('/tenant/setup', { replace: true });
+            }
+          } catch (error) {
+            console.error("Error checking profile setup:", error);
+          }
+        };
+        
+        checkProfileSetup();
+      }
     }
-  }, [user, isAdmin, requireAdmin]);
+  }, [user, loading, isAdmin, navigate, location.pathname, requireAdmin]);
 
-  if (loading || checkingAdmin) {
-    // While checking authentication status, show a loading indicator
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="flex flex-col items-center">
-          <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+  // Show nothing while checking auth state
+  if (loading || !user || (requireAdmin && !isAdmin)) {
+    return null;
   }
 
-  if (!user) {
-    // Redirect to the login page with a return url
-    return <Navigate to={`/auth?redirect=${encodeURIComponent(location.pathname)}`} replace />;
-  }
-
-  if (requireAdmin && !isAdmin) {
-    // If admin access is required but user is not an admin
-    return <Navigate to="/home" replace />;
-  }
-
-  return children;
+  return <>{children}</>;
 }
