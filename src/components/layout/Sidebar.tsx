@@ -14,7 +14,8 @@ import {
   X,
   Shield,
   Users,
-  LayoutDashboard
+  LayoutDashboard,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -60,6 +61,7 @@ export function Sidebar() {
     { name: "Properties", path: "/properties", icon: Building },
     { name: "Services", path: "/services", icon: Wrench },
     { name: "Maintenance", path: "/maintenance", icon: Wrench },
+    { name: "Documents", path: "/documents", icon: FileText },
     { name: "Payments", path: "/payments", icon: CreditCard },
     { name: "Profile", path: "/profile", icon: Settings },
   ];
