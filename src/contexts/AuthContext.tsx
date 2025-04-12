@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -193,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Sign in function
+  // Sign in function - updated to match the Promise<void> return type
   const signIn = async ({ email, password }: { email: string; password: string }) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -211,7 +210,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await checkUserRole(data.user.id);
       }
       
-      return data;
     } catch (error: any) {
       toast.error(error.message || "Invalid login credentials");
       throw error;
