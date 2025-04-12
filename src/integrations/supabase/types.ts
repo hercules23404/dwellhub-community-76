@@ -487,6 +487,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          flat_number: string | null
+          id: string
+          last_name: string | null
+          phone_number: string | null
+          society_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          flat_number?: string | null
+          id: string
+          last_name?: string | null
+          phone_number?: string | null
+          society_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          flat_number?: string | null
+          id?: string
+          last_name?: string | null
+          phone_number?: string | null
+          society_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null

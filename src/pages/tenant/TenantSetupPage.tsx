@@ -13,7 +13,6 @@ import { Check, Loader2, Home, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 
 interface Society {
   id: string;
@@ -39,7 +38,6 @@ export default function TenantSetupPage() {
   });
 
   useEffect(() => {
-    // First check if tenant already has a society assigned
     const checkExistingProfile = async () => {
       if (!user) return;
       
@@ -53,13 +51,11 @@ export default function TenantSetupPage() {
         if (error) throw error;
         
         if (data?.society_id && data?.flat_number) {
-          // User already has completed setup
           toast.info("Your profile is already set up.");
           navigate("/home");
           return;
         }
         
-        // Pre-fill name fields if available in user metadata
         if (user.user_metadata) {
           setFormData(prev => ({
             ...prev,
@@ -71,14 +67,12 @@ export default function TenantSetupPage() {
         console.error("Error checking profile:", error);
       }
       
-      // Fetch societies for selection
       fetchSocieties();
     };
     
     checkExistingProfile();
   }, [user, navigate]);
 
-  // Fetch available societies
   const fetchSocieties = async () => {
     try {
       const { data, error } = await supabase
@@ -141,7 +135,6 @@ export default function TenantSetupPage() {
     setIsLoading(true);
     
     try {
-      // Update user metadata
       const { error: metadataError } = await supabase.auth.updateUser({
         data: {
           first_name: formData.firstName,
@@ -153,7 +146,6 @@ export default function TenantSetupPage() {
       
       if (metadataError) throw metadataError;
       
-      // Update user profile
       const { error } = await supabase
         .from('user_profiles')
         .update({
@@ -179,7 +171,6 @@ export default function TenantSetupPage() {
     }
   };
 
-  // Render society selection step
   const renderSocietySelection = () => {
     return (
       <>
@@ -234,7 +225,6 @@ export default function TenantSetupPage() {
     );
   };
 
-  // Render profile setup step
   const renderProfileSetup = () => {
     return (
       <>
@@ -296,18 +286,6 @@ export default function TenantSetupPage() {
               type="tel"
               placeholder="+1 (555) 123-4567"
               value={formData.phone}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="bio">Bio (Optional)</Label>
-            <Textarea 
-              id="bio"
-              name="bio"
-              placeholder="Tell us a bit about yourself"
-              value={formData.bio}
               onChange={handleChange}
               disabled={isLoading}
             />
