@@ -15,7 +15,9 @@ export function ProfileHeader() {
     role: "Tenant",
     joinDate: "",
     avatar: "/placeholder.svg",
-    bio: ""
+    bio: "",
+    societyName: "",
+    flatNumber: ""
   });
 
   useEffect(() => {
@@ -23,14 +25,28 @@ export function ProfileHeader() {
       // Fetch user profile data from Supabase
       const fetchProfileData = async () => {
         try {
-          // Get basic user info
+          // Get basic user info from user_profiles
           const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
+            .from('user_profiles')
+            .select('*, societies(name)')
             .eq('id', user.id)
             .single();
 
-          if (profileError) throw profileError;
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            
+            // Fallback to profiles table if user_profiles doesn't have data
+            const { data: oldProfileData, error: oldProfileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+              
+            if (oldProfileError) throw oldProfileError;
+            
+            // Use old profiles data
+            profileData = oldProfileData;
+          }
 
           // Get role info
           const { data: roleData, error: roleError } = await supabase
@@ -49,10 +65,12 @@ export function ProfileHeader() {
             firstName: profileData?.first_name || user?.user_metadata?.first_name || "",
             lastName: profileData?.last_name || user?.user_metadata?.last_name || "",
             email: user.email || "",
-            role: roleData?.role?.charAt(0).toUpperCase() + roleData?.role?.slice(1) || "Tenant",
+            role: roleData?.role ? (roleData.role.charAt(0).toUpperCase() + roleData.role.slice(1)) : "Tenant",
             joinDate: formattedDate,
             avatar: profileData?.avatar_url || "/placeholder.svg",
-            bio: profileData?.bio || user?.user_metadata?.bio || ""
+            bio: profileData?.bio || user?.user_metadata?.bio || "",
+            societyName: profileData?.societies?.name || "",
+            flatNumber: profileData?.flat_number || ""
           });
         } catch (error) {
           console.error("Error fetching profile data:", error);
@@ -85,6 +103,14 @@ export function ProfileHeader() {
             
             <p className="text-muted-foreground">{profileData.email}</p>
             <p className="text-sm text-muted-foreground">Member since {profileData.joinDate}</p>
+            
+            {profileData.societyName && (
+              <p className="text-sm">
+                <span className="font-medium">Society:</span> {profileData.societyName}
+                {profileData.flatNumber && ` • Flat: ${profileData.flatNumber}`}
+              </p>
+            )}
+            
             {profileData.bio && <p className="text-sm mt-2">{profileData.bio}</p>}
           </div>
         </div>

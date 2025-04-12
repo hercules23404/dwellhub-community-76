@@ -24,6 +24,8 @@ import AdminTenantsPage from "./pages/admin/AdminTenantsPage";
 import AdminServicesPage from "./pages/admin/AdminServicesPage";
 import AdminNoticesPage from "./pages/admin/AdminNoticesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminSetupPage from "./pages/admin/AdminSetupPage";
+import TenantSetupPage from "./pages/tenant/TenantSetupPage";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,18 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/login" element={<Navigate to="/auth" replace />} />
+              
+              {/* Setup Routes */}
+              <Route path="/admin/setup" element={
+                <RequireAuth>
+                  <AdminSetupPage />
+                </RequireAuth>
+              } />
+              <Route path="/tenant/setup" element={
+                <RequireAuth>
+                  <TenantSetupPage />
+                </RequireAuth>
+              } />
               
               {/* Protected Routes */}
               <Route path="/home" element={
