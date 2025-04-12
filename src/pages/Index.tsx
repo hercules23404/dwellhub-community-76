@@ -43,7 +43,7 @@ export default function Index() {
             <p className="text-muted-foreground mb-8 text-center">
               Manage your society, monitor service requests, create notices and oversee properties
             </p>
-            <Button size="lg" className="w-full" asChild>
+            <Button size="lg" className="w-full" asChild data-testid="admin-login-button">
               <Link to="/auth?type=admin">Admin Login</Link>
             </Button>
           </div>
