@@ -2,7 +2,6 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useAdmin } from "@/contexts/AdminContext";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Settings, Shield, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AdminHeaderProps {
   className?: string;
@@ -23,7 +23,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ className }: AdminHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
-  const { logout } = useAdmin();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,10 +39,14 @@ export function AdminHeader({ className }: AdminHeaderProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    toast.success("Logged out successfully");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+      navigate("/auth");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (

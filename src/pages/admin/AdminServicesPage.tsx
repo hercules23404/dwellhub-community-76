@@ -1,24 +1,33 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { ServiceManagement } from "@/components/admin/ServiceManagement";
 
 export default function AdminServicesPage() {
-  const { isAdmin } = useAdmin();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // First check if user is logged in
+    if (!user) {
+      toast.error("You must be logged in to access the admin area");
+      navigate("/auth?redirect=/admin/services");
+      return;
+    }
+    
+    // Then check if user is admin
     if (!isAdmin) {
       toast.error("You don't have access to the admin area");
-      navigate("/login");
+      navigate("/home");
     }
-  }, [isAdmin, navigate]);
+  }, [user, isAdmin, navigate]);
 
-  if (!isAdmin) return null;
+  // Don't render anything if not authorized
+  if (!user || !isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background">

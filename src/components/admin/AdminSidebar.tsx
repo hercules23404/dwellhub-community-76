@@ -14,7 +14,7 @@ import {
   X, 
   Shield,
 } from "lucide-react";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 interface AdminSidebarProps {
@@ -27,7 +27,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const currentPath = location.pathname;
-  const { logout } = useAdmin();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   // Handle sidebar hover
@@ -76,10 +76,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    toast.success("Logged out successfully");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+      navigate("/auth");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const navigationItems = [
@@ -138,6 +142,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
                     ? "bg-red-100 text-red-700"
                     : "text-sidebar-foreground hover:text-sidebar-foreground"
                 )}
+                onClick={() => setIsOpen(false)}
               >
                 <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
                 {item.name}

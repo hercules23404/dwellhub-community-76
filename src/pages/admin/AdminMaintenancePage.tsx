@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -10,20 +10,29 @@ import { WorkerManagement } from "@/components/admin/WorkerManagement";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminMaintenancePage() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   
   // Mock society ID - in a real app, this would come from admin's profile
   const societyId = "123e4567-e89b-12d3-a456-426614174000";
 
   useEffect(() => {
+    // First check if user is logged in
+    if (!user) {
+      toast.error("You must be logged in to access the admin area");
+      navigate("/auth?redirect=/admin/maintenance");
+      return;
+    }
+    
+    // Then check if user is admin
     if (!isAdmin) {
       toast.error("You don't have access to the admin area");
-      navigate("/login");
+      navigate("/home");
     }
-  }, [isAdmin, navigate]);
+  }, [user, isAdmin, navigate]);
 
-  if (!isAdmin) return null;
+  // Don't render anything if not authorized
+  if (!user || !isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background">

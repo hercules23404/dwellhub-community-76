@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -12,12 +12,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, User, Settings, Bell, Building, HelpCircle, Shield } from "lucide-react";
-import { useAdmin } from "@/contexts/AdminContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function UserButton() {
-  const { isAdmin, logout: logoutAdmin } = useAdmin();
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
 
   const isLoggedIn = !!user;
@@ -25,7 +23,6 @@ export function UserButton() {
   const handleLogout = async () => {
     try {
       await signOut();
-      logoutAdmin(); // Also clear admin state
       navigate("/auth");
     } catch (error) {
       console.error("Logout error:", error);
