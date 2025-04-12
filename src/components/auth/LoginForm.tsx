@@ -72,6 +72,7 @@ export function LoginForm({ className }: LoginFormProps) {
 
         if (error) {
           toast.error(error.message);
+          setIsLoading(false);
           return;
         }
         
@@ -92,14 +93,27 @@ export function LoginForm({ className }: LoginFormProps) {
         if (loginType === "admin" && userRole !== "admin") {
           await supabase.auth.signOut();
           toast.error("You don't have admin access");
+          setIsLoading(false);
           return;
         }
         
-        // If user is logging in as admin
+        // Set admin role in context
         if (userRole === "admin") {
           login(true);
           toast.success("Admin login successful!");
-          navigate("/admin/dashboard");
+          
+          // Explicitly check if admin has a society and redirect accordingly
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('society_id')
+            .eq('id', data.user.id)
+            .maybeSingle();
+            
+          if (!profileData?.society_id) {
+            navigate("/admin/setup");
+          } else {
+            navigate("/admin/dashboard");
+          }
         } else {
           login(false);
           toast.success("Login successful!");

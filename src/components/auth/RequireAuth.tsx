@@ -42,10 +42,12 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
             // For admin users, redirect to admin setup if no society is set
             if (isAdmin && !data?.society_id && !location.pathname.includes('/admin/setup')) {
               navigate('/admin/setup', { replace: true });
+              return;
             }
             // For tenant users, redirect to tenant setup if no society is set
             else if (!isAdmin && !data?.society_id && !location.pathname.includes('/tenant/setup')) {
               navigate('/tenant/setup', { replace: true });
+              return;
             }
           } catch (error) {
             console.error("Error checking profile setup:", error);

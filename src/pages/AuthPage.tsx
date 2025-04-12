@@ -26,6 +26,7 @@ export default function AuthPage() {
           // Get intended redirect from URL params
           const redirectTo = new URLSearchParams(location.search).get("redirect");
           
+          // Always respect isAdmin flag from AuthContext
           if (isAdmin) {
             // Admin users
             if (!data?.society_id) {
@@ -54,10 +55,16 @@ export default function AuthPage() {
         } catch (error) {
           console.error("Error checking profile setup:", error);
           
-          // Fallback redirect if profile check fails
+          // Fallback redirect if profile check fails - respect isAdmin flag
           const fallbackRedirect = new URLSearchParams(location.search).get("redirect") || 
                       (isAdmin ? "/admin/dashboard" : "/home");
-          navigate(fallbackRedirect, { replace: true });
+          
+          // If no society is set up yet, redirect to appropriate setup page
+          if (isAdmin) {
+            navigate("/admin/setup", { replace: true });
+          } else {
+            navigate("/tenant/setup", { replace: true });
+          }
         }
       };
       
