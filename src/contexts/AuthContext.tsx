@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -42,7 +42,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === 'SIGNED_IN' && !loading) {
           toast.success("Successfully signed in");
           // Check user role on sign in
-          checkUserRole(session?.user?.id);
+          if (session?.user?.id) {
+            await checkUserRole(session.user.id);
+          }
         } else if (event === 'SIGNED_OUT' && !loading) {
           toast.success("Successfully signed out");
           setIsAdmin(false);
@@ -51,11 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       // Check user role on initial load
-      checkUserRole(session?.user?.id);
+      if (session?.user?.id) {
+        await checkUserRole(session.user.id);
+      }
       setLoading(false);
     });
 
@@ -65,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Function to check if user is admin
-  const checkUserRole = async (userId: string | undefined) => {
+  const checkUserRole = async (userId: string) => {
     if (!userId) {
       setIsAdmin(false);
       return;
@@ -79,10 +83,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       if (error) throw error;
-      setIsAdmin(data?.role === 'admin');
+      
+      const isUserAdmin = data?.role === 'admin';
+      setIsAdmin(isUserAdmin);
+      return isUserAdmin;
     } catch (error) {
       console.error("Error checking user role:", error);
       setIsAdmin(false);
+      return false;
     }
   };
 
@@ -105,19 +113,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     phoneNumber?: string;
   }) => {
     try {
-      // First, check if a user with this email already exists
-      const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
-        email,
-        password: 'dummyPasswordThatWillFail' // This will fail if the email exists or not
-      });
+      const isAdminSignup = tenantStatus === 'admin';
       
-      // If the response contains a user, it means the email exists (even though the password was wrong)
-      if (existingUser?.user) {
-        toast.error("An account with this email already exists. Please log in instead.");
-        throw new Error("Email already exists");
-      }
-      
-      // If we get here, the email doesn't exist, so proceed with signup
+      // First, create the auth user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -134,45 +132,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         // Check for duplicate email error
-        if (error.message.includes("User already registered")) {
+        if (error.message.includes("User already registered") || error.message.includes("already exists")) {
           toast.error("An account with this email already exists. Please log in instead.");
         } else {
           throw error;
         }
-      } else if (data.user) {
-        // Create user profile in the database
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            id: data.user.id,
-            first_name: firstName,
-            last_name: lastName,
-            bio: bio || null,
-            phone_number: phoneNumber || null
-          });
-
-        if (profileError) throw profileError;
-
-        // Determine if the user is registering as admin (from URL parameter)
-        const urlParams = new URLSearchParams(window.location.search);
-        const userType = urlParams.get('type');
-
-        // Create user role entry
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: data.user.id,
-            role: userType === 'admin' ? 'admin' : 'tenant'
-          });
-
-        if (roleError) throw roleError;
-
-        toast.success("Registration successful! Please check your email to verify your account.");
+        return;
       }
+      
+      if (!data.user) {
+        throw new Error("Failed to create user");
+      }
+      
+      console.log("User signup successful, creating profile...", data.user);
+
+      // Create user profile in the database
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: data.user.id,
+          first_name: firstName,
+          last_name: lastName,
+          bio: bio || null,
+          phone_number: phoneNumber || null
+        });
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+        throw profileError;
+      }
+
+      // Create user role entry
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: data.user.id,
+          role: isAdminSignup ? 'admin' : 'tenant'
+        });
+
+      if (roleError) {
+        console.error("Role assignment error:", roleError);
+        throw roleError;
+      }
+
+      if (data.session) {
+        // If auto sign-in occurred, update our state
+        setSession(data.session);
+        setUser(data.user);
+        
+        // For admin signup, ensure the admin role is set
+        if (isAdminSignup) {
+          await checkUserRole(data.user.id);
+        }
+      }
+
     } catch (error: any) {
-      if (error.message !== "Email already exists") {
-        toast.error(error.message || "An error occurred during sign up");
-      }
+      console.error("Signup error:", error);
+      toast.error(error.message || "An error occurred during sign up");
       throw error;
     }
   };
@@ -180,18 +196,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in function
   const signIn = async ({ email, password }: { email: string; password: string }) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
       
+      setSession(data.session);
+      setUser(data.user);
+      
       // Check if user is admin after login
-      const { data: user } = await supabase.auth.getUser();
-      if (user) {
-        checkUserRole(user.user?.id);
+      if (data.user) {
+        await checkUserRole(data.user.id);
       }
+      
+      return data;
     } catch (error: any) {
       toast.error(error.message || "Invalid login credentials");
       throw error;
@@ -204,6 +224,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setIsAdmin(false);
+      setUser(null);
+      setSession(null);
     } catch (error: any) {
       toast.error(error.message || "Error signing out");
       throw error;

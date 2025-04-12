@@ -12,16 +12,22 @@ export default function AdminUsersPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // First check if user is logged in
     if (!user) {
       toast.error("You must be logged in to access the admin area");
       navigate("/auth?redirect=/admin/users");
-    } else if (!isAdmin) {
+      return;
+    }
+    
+    // Then check if user is admin
+    if (!isAdmin) {
       toast.error("You don't have access to the admin area");
       navigate("/home");
     }
   }, [user, isAdmin, navigate]);
 
-  if (!isAdmin) return null;
+  // Don't render anything if not authorized
+  if (!user || !isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background">

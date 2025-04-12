@@ -31,7 +31,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function AuthForm() {
-  const { signIn, signUp, isAdmin } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -70,13 +70,10 @@ export function AuthForm() {
         password: data.password
       });
       
-      // Redirect based on user role - this now uses the isAdmin state from AuthContext
-      if (isAdmin) {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/home');
-      }
+      // The redirect will be handled by the AuthPage useEffect
+      toast.success("Successfully logged in");
     } catch (error: any) {
+      console.error("Login error:", error);
       toast.error(error.message || "Failed to log in");
     } finally {
       setIsLoading(false);
@@ -91,22 +88,30 @@ export function AuthForm() {
       // Check if signing up as admin
       const isAdminSignup = new URLSearchParams(location.search).get("type") === "admin";
       
-      // Register the new user
+      // Register the new user with clear role assignment
       await signUp({
         email: data.email,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
-        tenantStatus: isAdminSignup ? "admin" : "tenant"
+        tenantStatus: isAdminSignup ? "admin" : "tenant",
+        bio: isAdminSignup ? "Administrator account" : ""
       });
 
-      toast.success("Registration successful! Please check your email for verification.");
+      toast.success("Registration successful!");
       
-      // Redirect to login tab
-      setTab("login");
-      toast.info("Please log in with your new credentials");
+      // For admins, redirect to login tab for immediate login
+      if (isAdminSignup) {
+        setTab("login");
+        loginForm.setValue("email", data.email);
+        toast.info("Please log in with your new admin credentials");
+      } else {
+        // For regular users, just display a message
+        toast.info("Please check your email for verification if required.");
+      }
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign up");
+      console.error("Signup error:", error);
+      toast.error(error.message || "An error occurred during sign up");
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +122,8 @@ export function AuthForm() {
       <CardHeader>
         <CardTitle className="text-2xl text-center">Welcome</CardTitle>
         <CardDescription className="text-center">
-          {tab === "login" ? "Sign in to your account" : "Create a new account"}
+          {tab === "login" ? "Sign in to your account" : 
+           location.search.includes("type=admin") ? "Create an admin account" : "Create a new account"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -268,7 +274,7 @@ export function AuthForm() {
                       Creating account...
                     </>
                   ) : (
-                    "Create account"
+                    location.search.includes("type=admin") ? "Create admin account" : "Create account"
                   )}
                 </Button>
               </form>
