@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Container } from "@/components/ui/Container";
 import { Sparkles } from "lucide-react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
+import { Badge } from "@/components/ui/badge";
 
 export default function AuthPage() {
   const { user, loading, isAdmin } = useAuth();
@@ -13,34 +13,27 @@ export default function AuthPage() {
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("type") || "tenant";
 
-  // Redirect authenticated users appropriately
   useEffect(() => {
     if (user && !loading) {
-      // Get redirect path if any
       const redirectTo = searchParams.get("redirect");
       
-      // For admin users or admin login attempt
       if (isAdmin || userType === "admin") {
-        // Check if admin has already set up a society
         const checkAdminSociety = async () => {
           try {
             const { supabase } = await import('@/integrations/supabase/client');
             
-            // Check if profile has society_id
             const { data: profileData } = await supabase
               .from('user_profiles')
               .select('society_id')
               .eq('id', user.id)
               .maybeSingle();
             
-            // Check societies created by this admin
             const { data: societyData } = await supabase
               .from('societies')
               .select('id')
               .eq('created_by', user.id)
               .maybeSingle();
             
-            // Redirect to setup if no society, otherwise to dashboard
             if (!profileData?.society_id && !societyData?.id) {
               navigate("/admin/setup", { replace: true });
             } else {
@@ -48,7 +41,6 @@ export default function AuthPage() {
             }
           } catch (error) {
             console.error("Error checking admin society:", error);
-            // Default to setup on error
             navigate("/admin/setup", { replace: true });
           }
         };
@@ -57,7 +49,6 @@ export default function AuthPage() {
         return;
       }
 
-      // For tenant users
       const checkTenantProfile = async () => {
         try {
           const { supabase } = await import('@/integrations/supabase/client');
@@ -68,7 +59,6 @@ export default function AuthPage() {
             .eq('id', user.id)
             .maybeSingle();
           
-          // Redirect to tenant setup if profile is incomplete
           if (!data?.society_id || !data?.flat_number) {
             navigate("/tenant/setup", { replace: true });
           } else {
@@ -76,7 +66,6 @@ export default function AuthPage() {
           }
         } catch (error) {
           console.error("Error checking tenant profile:", error);
-          // Default to tenant setup on error
           navigate("/tenant/setup", { replace: true });
         }
       };
@@ -85,10 +74,8 @@ export default function AuthPage() {
     }
   }, [user, loading, isAdmin, navigate, location.search, userType]);
 
-  // Don't render anything while checking authentication
   if (loading) return null;
 
-  // Only render auth page for non-authenticated users
   if (user) return null;
 
   return (
