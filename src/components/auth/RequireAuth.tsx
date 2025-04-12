@@ -37,7 +37,7 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
         toast.error("You don't have permission to access this area");
         navigate('/home', { replace: true });
       } else {
-        // Skip profile setup checks for auth and setup pages
+        // Skip profile setup checks for auth, setup pages, and root landing page
         if (location.pathname.includes('/auth') || 
             location.pathname.includes('/setup') ||
             location.pathname === '/') {

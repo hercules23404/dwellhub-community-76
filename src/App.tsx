@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { RequireAuth } from "@/components/auth/RequireAuth";
@@ -42,9 +42,10 @@ const App = () => (
             <Toaster />
             <Sonner />
             <Routes>
+              {/* Root route - always shows the landing page */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/login" element={<Navigate to="/auth" replace />} />
+              <Route path="/login" element={<AuthPage />} />
               
               {/* Public Admin Pre-Signup Flow */}
               <Route path="/admin/presignup-setup" element={<PreSignupSocietySetupPage />} />
@@ -140,6 +141,7 @@ const App = () => (
                 </RequireAuth>
               } />
               
+              {/* Catch-all route for 404s */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
