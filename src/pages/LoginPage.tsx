@@ -26,7 +26,10 @@ export default function LoginPage() {
           </p>
         </div>
         <div className="w-full max-w-md p-1 gradient-border rounded-xl">
-          <LoginForm />
+          <LoginForm 
+            onSwitchToSignup={() => {}} 
+            userType="tenant"
+          />
         </div>
       </Container>
     </div>

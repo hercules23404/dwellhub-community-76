@@ -68,15 +68,15 @@ export default function Index() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" className="group">
-                <Link to="/auth">
+                <Link to="/auth?type=tenant">
                   Tenant Login
-                  <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition" />
+                  <Home className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
 
               <Button asChild size="lg" variant="secondary" className="group">
                 <Link to="/admin/presignup-setup">
-                  Admin Setup
+                  Admin Login
                   <ShieldCheck className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
