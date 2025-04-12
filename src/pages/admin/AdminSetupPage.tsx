@@ -33,21 +33,54 @@ export default function AdminSetupPage() {
       if (!user) return;
       
       try {
-        const { data, error } = await supabase
+        setIsLoading(true);
+        
+        // First check if user profile exists and has a society ID
+        const { data: profileData, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('society_id')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (profileError) throw profileError;
+        
+        // If user has a society ID, fetch the society details
+        if (profileData?.society_id) {
+          const { data: societyData, error: societyError } = await supabase
+            .from('societies')
+            .select('*')
+            .eq('id', profileData.society_id)
+            .maybeSingle();
+            
+          if (societyError) throw societyError;
+          
+          if (societyData) {
+            setExistingSociety(societyData);
+            toast.info("You've already created a society. Redirecting to your dashboard.");
+            navigate("/admin/dashboard", { replace: true });
+            return;
+          }
+        }
+        
+        // As a fallback, also check societies created by this user
+        const { data: societyByUserData, error: societyByUserError } = await supabase
           .from('societies')
           .select('*')
           .eq('created_by', user.id)
           .maybeSingle();
         
-        if (error) throw error;
+        if (societyByUserError) throw societyByUserError;
         
-        if (data) {
-          setExistingSociety(data);
-          toast.info("You've already created a society. You can manage it from your dashboard.");
-          navigate("/admin/dashboard");
+        if (societyByUserData) {
+          setExistingSociety(societyByUserData);
+          toast.info("You've already created a society. Redirecting to your dashboard.");
+          navigate("/admin/dashboard", { replace: true });
         }
       } catch (error: any) {
         console.error("Error checking existing society:", error);
+        toast.error("Failed to check existing society data");
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -91,7 +124,7 @@ export default function AdminSetupPage() {
         .filter(item => item);
       
       // Insert society data
-      const { data, error } = await supabase
+      const { data: societyData, error: societyError } = await supabase
         .from('societies')
         .insert({
           name: formData.name,
@@ -103,11 +136,11 @@ export default function AdminSetupPage() {
         })
         .select();
       
-      if (error) throw error;
+      if (societyError) throw societyError;
       
-      // Update user profile with society
-      if (data && data.length > 0) {
-        const societyId = data[0].id;
+      // Update user profile with society ID
+      if (societyData && societyData.length > 0) {
+        const societyId = societyData[0].id;
         
         const { error: profileError } = await supabase
           .from('user_profiles')
@@ -118,16 +151,20 @@ export default function AdminSetupPage() {
         
         if (profileError) {
           console.error("Error updating profile:", profileError);
-          toast.error("Failed to update your profile with society information");
+          throw new Error("Failed to update your profile with society information");
         }
+        
+        toast.success("Society has been successfully set up!");
+        // Delay navigation slightly to ensure data is saved and toast is shown
+        setTimeout(() => {
+          navigate("/admin/dashboard", { replace: true });
+        }, 1000);
+      } else {
+        throw new Error("Failed to create society - no data returned");
       }
-      
-      toast.success("Society has been successfully set up!");
-      navigate("/admin/dashboard");
-      
     } catch (error: any) {
+      console.error("Society creation error:", error);
       toast.error(error.message || "Failed to create society");
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -229,7 +266,12 @@ export default function AdminSetupPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+                data-testid="create-society-button"
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
