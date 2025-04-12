@@ -33,11 +33,22 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
         const checkProfileSetup = async () => {
           try {
             const { supabase } = await import('@/integrations/supabase/client');
-            const { data } = await supabase
+            const { data, error } = await supabase
               .from('user_profiles')
               .select('society_id, flat_number')
               .eq('id', user.id)
               .maybeSingle();
+            
+            if (error) {
+              console.error("Error checking profile setup:", error);
+              // On database errors, redirect to appropriate setup page based on role
+              if (isAdmin) {
+                navigate('/admin/setup', { replace: true });
+              } else {
+                navigate('/tenant/setup', { replace: true });
+              }
+              return;
+            }
             
             if (!data) {
               // No profile data - redirect to appropriate setup

@@ -5,7 +5,6 @@ import { Container } from "@/components/ui/Container";
 import { Sparkles } from "lucide-react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function AuthPage() {
   const { user, loading, isAdmin } = useAuth();
@@ -15,7 +14,7 @@ export default function AuthPage() {
   // Redirect authenticated users appropriately
   useEffect(() => {
     if (user && !loading) {
-      // For admin users, always redirect to admin setup or admin dashboard
+      // For admin users, always redirect to admin setup
       if (isAdmin) {
         navigate("/admin/setup", { replace: true });
         return;
