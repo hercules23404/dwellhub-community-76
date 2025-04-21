@@ -1,10 +1,7 @@
-
 import { useNavigate } from "react-router-dom";
 
 export default function TenantDashboardPage() {
-  // REMOVED LOGIN GUARDS FOR DEVELOPMENT DEMO ACCESS
-  // const navigate = useNavigate();
-
+  // DEV: No guards, always accessible
   return (
     <div className="max-w-2xl mx-auto p-4 animate-fade-in">
       <h1 className="text-3xl font-extrabold mb-6 text-purple-800">Welcome, Tenant!</h1>

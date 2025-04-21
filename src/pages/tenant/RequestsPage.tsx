@@ -1,7 +1,6 @@
 
 import TenantServiceRequests from "@/components/tenant/TenantServiceRequests";
-
-// Remove any login guard—now always accessible
+// DEV: No login guard, always show
 export default function TenantRequestsPage() {
   return (
     <div className="animate-fade-in py-8">

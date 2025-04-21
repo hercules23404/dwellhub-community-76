@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,29 +59,25 @@ export default function Index() {
               tenants, and administrators in one seamless experience.
             </p>
 
-            {/* Main Access Buttons - Login options */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button asChild size="lg" className="group">
+            <div className="flex flex-col sm:flex-row gap-4 mb-4 w-full justify-center">
+              <Button asChild size="lg" className="group w-56">
                 <Link to="/admin/login">
-                  Admin Access
-                  <ShieldCheck className="ml-2 h-4 w-4" />
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  Login as Admin
                 </Link>
               </Button>
-
-              <Button asChild size="lg" variant="secondary" className="group">
+              <Button asChild size="lg" variant="secondary" className="group w-56">
                 <Link to="/tenant/login">
-                  Tenant Access
-                  <Home className="ml-2 h-4 w-4" />
+                  <Home className="mr-2 h-4 w-4" />
+                  Login as Tenant
                 </Link>
               </Button>
             </div>
-
-            {/* Demo buttons - clearly visible with prominence */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+            <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full justify-center">
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary font-semibold"
+                className="bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary font-semibold w-56"
                 onClick={() => navigate('/admin/dashboard')}
               >
                 <LogIn className="mr-2 h-4 w-4" />
@@ -91,7 +86,7 @@ export default function Index() {
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-secondary/10 hover:bg-secondary/20 border-secondary/30 text-secondary font-semibold"
+                className="bg-secondary/10 hover:bg-secondary/20 border-secondary/30 text-secondary font-semibold w-56"
                 onClick={() => navigate('/tenant/dashboard')}
               >
                 <LogIn className="mr-2 h-4 w-4" />

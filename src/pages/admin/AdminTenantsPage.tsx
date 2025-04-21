@@ -1,25 +1,10 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAdmin } from "@/contexts/AdminContext";
-import { toast } from "sonner";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { TenantManagement } from "@/components/admin/TenantManagement";
 
+// DEV: No login guards, always render
 export default function AdminTenantsPage() {
-  const { isAdmin } = useAdmin();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isAdmin) {
-      toast.error("You don't have access to the admin area");
-      navigate("/login");
-    }
-  }, [isAdmin, navigate]);
-
-  if (!isAdmin) return null;
-
   return (
     <div className="min-h-screen bg-background">
       <AdminHeader />

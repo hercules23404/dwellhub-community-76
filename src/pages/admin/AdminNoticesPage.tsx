@@ -7,24 +7,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { NoticeManagement } from "@/components/admin/NoticeManagement";
 
 export default function AdminNoticesPage() {
-  // REMOVED LOGIN GUARDS FOR DEVELOPMENT DEMO ACCESS
-  // const { user, isAdmin } = useAuth();
-  // const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   if (!user) {
-  //     toast.error("You must be logged in to access the admin area");
-  //     navigate("/auth?redirect=/admin/notices");
-  //     return;
-  //   }
-  //   if (!isAdmin) {
-  //     toast.error("You don't have access to the admin area");
-  //     navigate("/home");
-  //   }
-  // }, [user, isAdmin, navigate]);
-
-  // if (!user || !isAdmin) return null;
-
+  // DEV: Page accessible for all
   return (
     <div className="min-h-screen bg-background">
       <AdminHeader />

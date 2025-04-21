@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,9 @@ import { Shield, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminLoginPage() {
+  // DEV: No guard, allow open access
+  // No login required to view the form/page
+  // ... keep rest of code (admin login card & form) the same ...
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,11 +19,9 @@ export default function AdminLoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
     // Simulate login process
     setTimeout(() => {
       setIsLoading(false);
-      toast.success("Admin logged in successfully");
       navigate("/admin/dashboard");
     }, 1000);
   };
@@ -34,7 +34,6 @@ export default function AdminLoginPage() {
             <Shield className="h-8 w-8 text-primary" />
           </div>
         </div>
-        
         <Card className="w-full">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
@@ -42,7 +41,6 @@ export default function AdminLoginPage() {
               Access your society management dashboard
             </CardDescription>
           </CardHeader>
-          
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -57,7 +55,6 @@ export default function AdminLoginPage() {
                   disabled={isLoading}
                 />
               </div>
-              
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
@@ -80,7 +77,6 @@ export default function AdminLoginPage() {
                 />
               </div>
             </CardContent>
-            
             <CardFooter className="flex flex-col space-y-4">
               <Button 
                 type="submit" 
@@ -96,7 +92,6 @@ export default function AdminLoginPage() {
                   "Login"
                 )}
               </Button>
-              
               <div className="text-center text-sm">
                 <p>
                   Don't have an account?{" "}
@@ -105,8 +100,6 @@ export default function AdminLoginPage() {
                   </Link>
                 </p>
               </div>
-              
-              {/* Demo shortcut */}
               <Button
                 type="button"
                 variant="outline"

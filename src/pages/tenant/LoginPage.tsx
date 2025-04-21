@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,11 +16,9 @@ export default function TenantLoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
     // Simulate login success
     setTimeout(() => {
       setIsLoading(false);
-      toast.success("Login successful!");
       navigate("/tenant/dashboard");
     }, 800);
   };
@@ -34,7 +31,6 @@ export default function TenantLoginPage() {
             <Home className="h-8 w-8 text-secondary" />
           </div>
         </div>
-        
         <Card className="w-full">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Tenant Login</CardTitle>
@@ -42,7 +38,6 @@ export default function TenantLoginPage() {
               Access your resident portal
             </CardDescription>
           </CardHeader>
-          
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -57,7 +52,6 @@ export default function TenantLoginPage() {
                   disabled={isLoading}
                 />
               </div>
-              
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
@@ -80,7 +74,6 @@ export default function TenantLoginPage() {
                 />
               </div>
             </CardContent>
-            
             <CardFooter className="flex flex-col space-y-4">
               <Button 
                 type="submit" 
@@ -96,7 +89,6 @@ export default function TenantLoginPage() {
                   "Login"
                 )}
               </Button>
-              
               <div className="text-center text-sm">
                 <p>
                   Don't have an account?{" "}
@@ -105,8 +97,6 @@ export default function TenantLoginPage() {
                   </Link>
                 </p>
               </div>
-              
-              {/* Demo shortcut */}
               <Button
                 type="button"
                 variant="outline"

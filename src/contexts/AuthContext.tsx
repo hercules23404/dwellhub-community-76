@@ -1,14 +1,16 @@
 
-// Static wireframe-only: no auth context needed!
+// TEMPORARY FOR DEMO — always return a dummy user and admin/tenant modes
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Just return children. No real provider needed for demo
   return <>{children}</>;
 }
-// Static/dummy frontend hook for compatibility; always returns "signed out"
+
 export const useAuth = () => ({
-  user: null,
-  session: null,
+  user: { name: "Demo User", email: "demo@example.com" },
+  session: { id: "dummy-session" },
   loading: false,
-  isAdmin: false,
+  isAdmin: true, // Always admin for demo
   signUp: () => {},
   signIn: () => {},
   signOut: () => {},

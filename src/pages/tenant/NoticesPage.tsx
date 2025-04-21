@@ -1,4 +1,5 @@
 
+// DEV: No login guard, always show
 export default function TenantNoticesPage() {
   return (
     <div>

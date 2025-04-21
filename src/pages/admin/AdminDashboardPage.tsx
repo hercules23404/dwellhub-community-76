@@ -9,29 +9,7 @@ import { AdminDashboardCards } from "@/components/admin/AdminDashboardCards";
 import { AdminRentChart } from "@/components/admin/AdminRentChart";
 
 export default function AdminDashboardPage() {
-  // REMOVED LOGIN GUARDS FOR DEVELOPMENT DEMO ACCESS
-  // const { user, isAdmin } = useAuth();
-  // const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   if (!user) {
-  //     toast.error("You must be logged in to access the admin area");
-  //     navigate("/auth?redirect=/admin/dashboard");
-  //     return;
-  //   }
-  //   if (!isAdmin) {
-  //     toast.error("You don't have access to the admin area");
-  //     navigate("/home");
-  //     return;
-  //   }
-  //   toast.success("Welcome to the admin dashboard", {
-  //     description: "You can manage properties, tenants, services and notices here",
-  //   });
-  // }, [user, isAdmin, navigate]);
-
-  // Don't render anything if not authorized
-  // if (!user || !isAdmin) return null;
-
+  // DEV: Show dashboard unconditionally, no guards
   return (
     <div className="min-h-screen bg-background">
       <AdminHeader />

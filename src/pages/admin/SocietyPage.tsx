@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminSocietyPage() {
-  // Simulate whether a society exists
+  // DEV: Page accessible for all
   const [hasSociety, setHasSociety] = useState(false);
   const [societyName, setSocietyName] = useState("");
   const [address, setAddress] = useState("");
@@ -10,10 +11,6 @@ export default function AdminSocietyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // In a real app, this would come from backend/user context.
-  // Here, we keep a dummy state variable for demonstration.
-
-  // Simulate society name for display if society exists
   const managedSocietyName = "Malabar Heights";
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -22,11 +19,9 @@ export default function AdminSocietyPage() {
     setIsSubmitting(true);
     setTimeout(() => {
       setHasSociety(true);
-      // In a real app, would store society data
-      // We'll just set the dummy name for now and pretend it's saved
       setIsSubmitting(false);
       navigate("/admin/dashboard", { state: { societyName: societyName } });
-    }, 900); // simulate
+    }, 900);
   };
 
   if (!hasSociety) {
@@ -87,7 +82,6 @@ export default function AdminSocietyPage() {
     );
   }
 
-  // If society exists, show confirmation
   return (
     <div className="max-w-md mx-auto mt-32 bg-white rounded-lg shadow p-8 text-center">
       <h1 className="text-2xl font-bold mb-4">{`You are managing ${managedSocietyName}`}</h1>
