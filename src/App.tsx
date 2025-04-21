@@ -1,13 +1,12 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { AdminProvider } from "@/contexts/AdminContext";
-import { RequireAuth } from "@/components/auth/RequireAuth";
+
+// Remove all backend Context Providers and any query client
+// Just keep simple routing and static page rendering
+
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import HomePage from "./pages/HomePage";
@@ -30,124 +29,44 @@ import PreSignupSocietySetupPage from "./pages/admin/PreSignupSocietySetupPage";
 import AdminMaintenancePage from "./pages/admin/AdminMaintenancePage";
 import TenantSetupPage from "./pages/tenant/TenantSetupPage";
 
-const queryClient = new QueryClient();
+// Simulates static "role" for demo UI navigation purposes only.
+const userRole = "tenant"; // change to "admin" as needed for static demo
+const isLoggedIn = true;   // fake login for navigation wireframe
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <AdminProvider>
-        <TooltipProvider>
-          <BrowserRouter>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              {/* Root route - always shows the landing page */}
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/login" element={<AuthPage />} />
-              
-              {/* Public Admin Pre-Signup Flow */}
-              <Route path="/admin/presignup-setup" element={<PreSignupSocietySetupPage />} />
-              
-              {/* Setup Routes */}
-              <Route path="/admin/setup" element={
-                <RequireAuth>
-                  <AdminSetupPage />
-                </RequireAuth>
-              } />
-              <Route path="/tenant/setup" element={
-                <RequireAuth>
-                  <TenantSetupPage />
-                </RequireAuth>
-              } />
-              
-              {/* Protected Routes - Tenant Dashboard */}
-              <Route path="/home" element={
-                <RequireAuth>
-                  <HomePage />
-                </RequireAuth>
-              } />
-              <Route path="/notices" element={
-                <RequireAuth>
-                  <NoticePage />
-                </RequireAuth>
-              } />
-              <Route path="/properties" element={
-                <RequireAuth>
-                  <PropertyPage />
-                </RequireAuth>
-              } />
-              <Route path="/services" element={
-                <RequireAuth>
-                  <ServicePage />
-                </RequireAuth>
-              } />
-              <Route path="/payments" element={
-                <RequireAuth>
-                  <PaymentPage />
-                </RequireAuth>
-              } />
-              <Route path="/maintenance" element={
-                <RequireAuth>
-                  <MaintenancePage />
-                </RequireAuth>
-              } />
-              <Route path="/documents" element={
-                <RequireAuth>
-                  <DocumentsPage />
-                </RequireAuth>
-              } />
-              <Route path="/profile" element={
-                <RequireAuth>
-                  <ProfilePage />
-                </RequireAuth>
-              } />
-              
-              {/* Admin Routes - Admin Dashboard */}
-              <Route path="/admin/dashboard" element={
-                <RequireAuth requireAdmin={true}>
-                  <AdminDashboardPage />
-                </RequireAuth>
-              } />
-              <Route path="/admin/properties" element={
-                <RequireAuth requireAdmin={true}>
-                  <AdminPropertiesPage />
-                </RequireAuth>
-              } />
-              <Route path="/admin/tenants" element={
-                <RequireAuth requireAdmin={true}>
-                  <AdminTenantsPage />
-                </RequireAuth>
-              } />
-              <Route path="/admin/services" element={
-                <RequireAuth requireAdmin={true}>
-                  <AdminServicesPage />
-                </RequireAuth>
-              } />
-              <Route path="/admin/notices" element={
-                <RequireAuth requireAdmin={true}>
-                  <AdminNoticesPage />
-                </RequireAuth>
-              } />
-              <Route path="/admin/maintenance" element={
-                <RequireAuth requireAdmin={true}>
-                  <AdminMaintenancePage />
-                </RequireAuth>
-              } />
-              <Route path="/admin/users" element={
-                <RequireAuth requireAdmin={true}>
-                  <AdminUsersPage />
-                </RequireAuth>
-              } />
-              
-              {/* Catch-all route for 404s */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AdminProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <TooltipProvider>
+    <BrowserRouter>
+      <Toaster />
+      <Sonner />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/admin/presignup-setup" element={<PreSignupSocietySetupPage />} />
+        {/* Setup Routes */}
+        <Route path="/admin/setup" element={<AdminSetupPage />} />
+        <Route path="/tenant/setup" element={<TenantSetupPage />} />
+        {/* Tenant Dashboard */}
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/notices" element={<NoticePage />} />
+        <Route path="/properties" element={<PropertyPage />} />
+        <Route path="/services" element={<ServicePage />} />
+        <Route path="/payments" element={<PaymentPage />} />
+        <Route path="/maintenance" element={<MaintenancePage />} />
+        <Route path="/documents" element={<DocumentsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        {/* Admin Routes */}
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/properties" element={<AdminPropertiesPage />} />
+        <Route path="/admin/tenants" element={<AdminTenantsPage />} />
+        <Route path="/admin/services" element={<AdminServicesPage />} />
+        <Route path="/admin/notices" element={<AdminNoticesPage />} />
+        <Route path="/admin/maintenance" element={<AdminMaintenancePage />} />
+        <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  </TooltipProvider>
 );
 
 export default App;

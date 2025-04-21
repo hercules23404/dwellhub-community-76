@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Shield, User, Loader2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Remove all backend/auth related props and context
 interface LoginFormProps {
   onSwitchToSignup: () => void;
   userType: string;
@@ -19,14 +17,11 @@ export function LoginForm({ onSwitchToSignup, userType }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [loginType, setLoginType] = useState<"tenant" | "admin">(userType as "tenant" | "admin");
 
-  // No longer doing any actual login, just wireframe/UI
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      // In a real app, would redirect based on role/type
-      // For wireframe, do nothing
     }, 1000);
   };
 
@@ -80,7 +75,6 @@ export function LoginForm({ onSwitchToSignup, userType }: LoginFormProps) {
               <button 
                 type="button" 
                 className="text-sm text-primary hover:underline"
-                // No backend, just disabled wireframe
                 onClick={() => {}}
                 disabled={isLoading}
               >
@@ -134,4 +128,3 @@ export function LoginForm({ onSwitchToSignup, userType }: LoginFormProps) {
     </Card>
   );
 }
-

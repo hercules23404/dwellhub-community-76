@@ -1,6 +1,6 @@
+
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { 
   Home, 
@@ -21,17 +21,15 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function Sidebar() {
-  const { user, isAdmin, signOut } = useAuth();
+  // Remove backend user/isAdmin context; fake values for static demo
+  const user = true;
+  const isAdmin = false;
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Check if the current route is active
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+  const isActive = (path: string) => location.pathname === path;
 
-  // Handle window resize
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -44,15 +42,6 @@ export function Sidebar() {
       window.removeEventListener("resize", checkScreenSize);
     };
   }, []);
-
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
 
   // Navigation items for tenant users
   const tenantNavItems = [
@@ -77,10 +66,8 @@ export function Sidebar() {
     { name: "Users", path: "/admin/users", icon: Shield },
   ];
 
-  // Select the appropriate navigation items based on user role
   const navItems = isAdmin ? adminNavItems : tenantNavItems;
 
-  // Sidebar content component (used in both desktop and mobile views)
   const SidebarContent = () => (
     <div className="flex h-full flex-col border-r bg-background">
       <div className="flex-1 overflow-auto py-2">
@@ -117,7 +104,8 @@ export function Sidebar() {
         <Button
           variant="outline"
           className="w-full justify-start"
-          onClick={handleLogout}
+          // No actual logout in wireframe
+          onClick={() => {}}
         >
           <LogOut className="mr-2 h-4 w-4" />
           Log out
@@ -126,7 +114,6 @@ export function Sidebar() {
     </div>
   );
 
-  // Mobile sidebar (sheet component)
   if (isMobile) {
     return (
       <>
@@ -149,7 +136,6 @@ export function Sidebar() {
     );
   }
 
-  // Desktop sidebar
   return (
     <div className="fixed bottom-0 right-0 top-16 z-30 hidden w-64 border-l lg:block">
       <SidebarContent />

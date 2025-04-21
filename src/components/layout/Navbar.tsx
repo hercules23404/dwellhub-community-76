@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,9 +10,12 @@ interface NavbarProps {
   className?: string;
 }
 
+// Fake user and isAdmin for static demo purposes
+const user = true;
+const isAdmin = false;
+
 export function Navbar({ className }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
-  const { user, isAdmin } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -96,7 +98,6 @@ export function Navbar({ className }: NavbarProps) {
             </div>
           )}
           
-          {/* Dashboard button redirects based on role */}
           <Button 
             variant="outline" 
             size="icon" 
@@ -109,7 +110,10 @@ export function Navbar({ className }: NavbarProps) {
             </Link>
           </Button>
           
-          <UserButton />
+          {/* User button stub for static wireframe */}
+          <Button variant="ghost" size="icon">
+            <User className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </header>
