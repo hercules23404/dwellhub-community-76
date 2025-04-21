@@ -5,15 +5,12 @@ import { TenantLayout } from "@/layouts/TenantLayout";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { Sparkles, Building, Users, Bell, ShieldCheck, Home } from "lucide-react";
 
-// Landing & CTA
 function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen items-center justify-center relative overflow-hidden bg-gradient-to-br from-purple-300 via-purple-200 to-indigo-300 px-4">
-      {/* Background blur circles */}
       <div className="absolute top-[-10%] left-[-20%] w-[40rem] h-[40rem] bg-gradient-to-tr from-purple-500 to-indigo-400 rounded-full blur-3xl opacity-70 animate-float-slow pointer-events-none" />
       <div className="absolute bottom-[-15%] right-[-10%] w-[50rem] h-[50rem] bg-gradient-to-tr from-indigo-400 via-purple-400 to-pink-400 rounded-full blur-3xl opacity-70 animate-float pointer-events-none" />
 
-      {/* Header */}
       <h1 className="text-5xl md:text-6xl font-extrabold mt-24 mb-4 cursor-default bg-gradient-to-b from-purple-700 via-indigo-600 to-purple-900 bg-clip-text text-transparent select-none text-center">
         AVA Property Management
       </h1>
@@ -22,7 +19,6 @@ function LandingPage() {
         A comprehensive platform for modern property management.
       </p>
 
-      {/* Navigation Buttons */}
       <div className="flex gap-8 z-10 mb-12 flex-col md:flex-row items-center w-full max-w-xl">
         <a
           href="/tenant/login"
@@ -38,7 +34,6 @@ function LandingPage() {
         </a>
       </div>
 
-      {/* Feature List */}
       <section className="w-full max-w-5xl mb-12 z-20">
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-white/90 glass shadow-xl rounded-xl px-7 py-9 flex flex-col items-center text-center border border-purple-200 hover-scale transition-all-200">
@@ -77,7 +72,6 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Bottom CTA */}
       <div className="mb-10 z-30">
         <div className="bg-gradient-to-tr from-indigo-200 via-purple-200 to-pink-200 rounded-2xl px-8 py-7 shadow-lg flex flex-col items-center border border-purple-100 max-w-2xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold mb-2 text-purple-800">
@@ -105,41 +99,30 @@ function LandingPage() {
         </div>
       </div>
 
-      {/* Sparkles icon near bottom right */}
       <Sparkles className="absolute bottom-10 right-10 h-8 w-8 text-purple-600 animate-pulse" />
     </div>
   );
 }
 
-// Wireframe static app structure with layouts/routes
 import TenantLoginPage from "@/pages/tenant/LoginPage";
 import TenantDashboardPage from "@/pages/tenant/DashboardPage";
 import TenantNoticesPage from "@/pages/tenant/NoticesPage";
 import TenantRequestsPage from "@/pages/tenant/RequestsPage";
-import AdminLoginPage from "@/pages/admin/LoginPage";
-import AdminSignupPage from "@/pages/admin/SignupPage";
-import AdminDashboardPage from "@/pages/admin/DashboardPage";
-import AdminSocietyPage from "@/pages/admin/SocietyPage";
-import AdminTenantsPage from "@/pages/admin/TenantsPage";
-import AdminNoticesPage from "@/pages/admin/NoticesPage";
-import AdminRequestsPage from "@/pages/admin/RequestsPage";
+import TenantLeasePage from "@/pages/tenant/LeasePage";
 
 export default function App() {
   return (
     <WireframeAuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Landing */}
           <Route path="/" element={<LandingPage />} />
-          {/* Tenant Flow */}
           <Route path="/tenant/login" element={<TenantLoginPage />} />
           <Route element={<TenantLayout><TenantDashboardPage /></TenantLayout>} path="/tenant/dashboard" />
           <Route element={<TenantLayout><TenantNoticesPage /></TenantLayout>} path="/tenant/notices" />
           <Route element={<TenantLayout><TenantRequestsPage /></TenantLayout>} path="/tenant/requests" />
-          {/* Admin Auth Flow */}
+          <Route element={<TenantLayout><TenantLeasePage /></TenantLayout>} path="/tenant/lease" />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/signup" element={<AdminSignupPage />} />
-          {/* Admin Dashboard/Pages (all protected by AdminLayout) */}
           <Route element={
             <AdminProvider>
               <AdminLayout><AdminDashboardPage /></AdminLayout>
@@ -165,7 +148,6 @@ export default function App() {
               <AdminLayout><AdminRequestsPage /></AdminLayout>
             </AdminProvider>
           } path="/admin/requests" />
-          {/* Fallback: */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
