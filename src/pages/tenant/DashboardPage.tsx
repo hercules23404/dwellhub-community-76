@@ -1,4 +1,6 @@
 
+import { NoticeList } from "@/components/notice/NoticeList";
+
 export default function TenantDashboardPage() {
   return (
     <div>
@@ -9,6 +11,10 @@ export default function TenantDashboardPage() {
         <li>👤 <span>Profile Section (Coming soon)</span></li>
         <li>🏢 <span>Society Overview (read-only)</span></li>
       </ul>
+      {/* Only add the NoticeList if not already present */}
+      <div className="mt-8">
+        <NoticeList />
+      </div>
     </div>
   );
 }

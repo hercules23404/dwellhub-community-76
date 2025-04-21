@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import { WireframeAuthProvider } from "@/contexts/WireframeAuthContext";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { TenantLayout } from "@/layouts/TenantLayout";
@@ -11,8 +11,12 @@ function LandingPage() {
     <div className="flex flex-col min-h-screen items-center justify-center">
       <h1 className="text-4xl font-extrabold mb-6">AVA Property Management</h1>
       <div className="flex gap-6">
-        <a href="/tenant/login" className="px-8 py-4 bg-primary rounded text-white text-lg hover:scale-105 transition">Login as Tenant</a>
-        <a href="/admin/login" className="px-8 py-4 bg-red-500 rounded text-white text-lg hover:scale-105 transition">Admin Login/Signup</a>
+        {/* Fix: use Link for SPA navigation */}
+        <Link to="/tenant/login" className="px-8 py-4 bg-primary rounded text-white text-lg hover:scale-105 transition">Login as Tenant</Link>
+        <div className="flex flex-col gap-2">
+          <Link to="/admin/login" className="px-8 py-4 bg-red-500 rounded text-white text-lg hover:scale-105 transition">Admin Login</Link>
+          <Link to="/admin/signup" className="px-8 py-4 bg-red-400 rounded text-white text-lg hover:scale-105 transition">Admin Signup</Link>
+        </div>
       </div>
     </div>
   );
