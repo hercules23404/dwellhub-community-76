@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,10 +75,12 @@ export default function Index() {
               </Button>
             </div>
 
-            <div className="flex gap-4 mt-8">
+            {/* Demo buttons - clearly visible with prominence */}
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
               <Button
                 size="lg"
                 variant="outline"
+                className="bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary font-semibold"
                 onClick={() => navigate('/admin/dashboard')}
               >
                 Demo as Admin
@@ -85,6 +88,7 @@ export default function Index() {
               <Button
                 size="lg"
                 variant="outline"
+                className="bg-secondary/10 hover:bg-secondary/20 border-secondary/30 text-secondary font-semibold"
                 onClick={() => navigate('/tenant/dashboard')}
               >
                 Demo as Tenant
