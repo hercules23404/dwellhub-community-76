@@ -4,20 +4,48 @@ import { WireframeAuthProvider } from "@/contexts/WireframeAuthContext";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { TenantLayout } from "@/layouts/TenantLayout";
 import { AdminProvider } from "@/contexts/AdminContext";
+import { Sparkles } from "lucide-react";
 
 // Landing & CTA
 function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-extrabold mb-6">AVA Property Management</h1>
-      <div className="flex gap-6">
-        {/* Fix: use Link for SPA navigation */}
-        <Link to="/tenant/login" className="px-8 py-4 bg-primary rounded text-white text-lg hover:scale-105 transition">Login as Tenant</Link>
-        <div className="flex flex-col gap-2">
-          <Link to="/admin/login" className="px-8 py-4 bg-red-500 rounded text-white text-lg hover:scale-105 transition">Admin Login</Link>
-          <Link to="/admin/signup" className="px-8 py-4 bg-red-400 rounded text-white text-lg hover:scale-105 transition">Admin Signup</Link>
+    <div className="flex flex-col min-h-screen items-center justify-center relative overflow-hidden bg-gradient-to-br from-purple-300 via-purple-200 to-indigo-300 px-6">
+      {/* Background blur circles */}
+      <div className="absolute top-[-10%] left-[-20%] w-[40rem] h-[40rem] bg-gradient-to-tr from-purple-500 to-indigo-400 rounded-full blur-3xl opacity-70 animate-float-slow pointer-events-none" />
+      <div className="absolute bottom-[-15%] right-[-10%] w-[50rem] h-[50rem] bg-gradient-to-tr from-indigo-400 via-purple-400 to-pink-400 rounded-full blur-3xl opacity-70 animate-float pointer-events-none" />
+
+      <h1 className="text-5xl md:text-6xl font-extrabold mb-8 cursor-default bg-gradient-to-b from-purple-700 via-indigo-600 to-purple-900 bg-clip-text text-transparent select-none">
+        AVA Property Management
+      </h1>
+
+      <div className="flex gap-10 z-10">
+        {/* Tenant Login */}
+        <Link
+          to="/tenant/login"
+          className="px-10 py-5 rounded-lg text-white text-xl font-semibold shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+        >
+          Login as Tenant
+        </Link>
+
+        {/* Admin Login & Signup */}
+        <div className="flex flex-col gap-4">
+          <Link
+            to="/admin/login"
+            className="px-10 py-4 rounded-lg text-white text-lg font-semibold shadow-md hover:shadow-lg transition transform hover:-translate-y-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+          >
+            Admin Login
+          </Link>
+          <Link
+            to="/admin/signup"
+            className="px-10 py-4 rounded-lg text-white text-lg font-semibold shadow-md hover:shadow-lg transition transform hover:-translate-y-1 bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600"
+          >
+            Admin Signup
+          </Link>
         </div>
       </div>
+
+      {/* Sparkles icon near bottom right */}
+      <Sparkles className="absolute bottom-10 right-10 h-8 w-8 text-purple-600 animate-pulse" />
     </div>
   );
 }
@@ -84,3 +112,4 @@ import AdminSocietyPage from "@/pages/admin/SocietyPage";
 import AdminTenantsPage from "@/pages/admin/TenantsPage";
 import AdminNoticesPage from "@/pages/admin/NoticesPage";
 import AdminRequestsPage from "@/pages/admin/RequestsPage";
+
