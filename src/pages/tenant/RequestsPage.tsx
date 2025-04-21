@@ -1,9 +1,10 @@
 
+import TenantServiceRequests from "@/components/tenant/TenantServiceRequests";
+
 export default function TenantRequestsPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Tenant Service Requests</h1>
-      <p>Service request list here...</p>
+    <div className="animate-fade-in py-8">
+      <TenantServiceRequests />
     </div>
   );
 }
