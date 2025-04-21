@@ -112,6 +112,18 @@ function LandingPage() {
 }
 
 // Wireframe static app structure with layouts/routes
+import TenantLoginPage from "@/pages/tenant/LoginPage";
+import TenantDashboardPage from "@/pages/tenant/DashboardPage";
+import TenantNoticesPage from "@/pages/tenant/NoticesPage";
+import TenantRequestsPage from "@/pages/tenant/RequestsPage";
+import AdminLoginPage from "@/pages/admin/LoginPage";
+import AdminSignupPage from "@/pages/admin/SignupPage";
+import AdminDashboardPage from "@/pages/admin/DashboardPage";
+import AdminSocietyPage from "@/pages/admin/SocietyPage";
+import AdminTenantsPage from "@/pages/admin/TenantsPage";
+import AdminNoticesPage from "@/pages/admin/NoticesPage";
+import AdminRequestsPage from "@/pages/admin/RequestsPage";
+
 export default function App() {
   return (
     <WireframeAuthProvider>
@@ -160,16 +172,3 @@ export default function App() {
     </WireframeAuthProvider>
   );
 }
-
-// Page components
-import TenantLoginPage from "@/pages/tenant/LoginPage";
-import TenantDashboardPage from "@/pages/tenant/DashboardPage";
-import TenantNoticesPage from "@/pages/tenant/NoticesPage";
-import TenantRequestsPage from "@/pages/tenant/RequestsPage";
-import AdminLoginPage from "@/pages/admin/LoginPage";
-import AdminSignupPage from "@/pages/admin/SignupPage";
-import AdminDashboardPage from "@/pages/admin/DashboardPage";
-import AdminSocietyPage from "@/pages/admin/SocietyPage";
-import AdminTenantsPage from "@/pages/admin/TenantsPage";
-import AdminNoticesPage from "@/pages/admin/NoticesPage";
-import AdminRequestsPage from "@/pages/admin/RequestsPage";
