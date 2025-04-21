@@ -4,7 +4,8 @@ import { Society } from '../models/Society';
 import { Tenant } from '../models/Tenant';
 import { requireAdminAuth } from '../middleware/auth';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { generateToken } from '../utils/jwt';
+import { Types } from 'mongoose';
 
 const router = express.Router();
 
@@ -12,15 +13,35 @@ const router = express.Router();
 router.post('/signup', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        const passwordHash = await bcrypt.hash(password, 10);
 
+        // Validate input
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        // Check if admin already exists
+        const existingAdmin = await Admin.findOne({ email });
+        if (existingAdmin) {
+            return res.status(400).json({ error: 'Email already registered' });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
         const admin = new Admin({ name, email, passwordHash });
         await admin.save();
 
-        const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET as string);
-        res.status(201).json({ admin, token });
+        const token = generateToken(admin._id, 'admin');
+        res.status(201).json({
+            admin: {
+                id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                societyId: admin.societyId
+            },
+            token
+        });
     } catch (err) {
-        res.status(400).json({ error: 'Error creating admin' });
+        console.error('Admin signup error:', err);
+        res.status(500).json({ error: 'Error creating admin account' });
     }
 });
 
@@ -28,21 +49,34 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const admin = await Admin.findOne({ email });
 
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        const admin = await Admin.findOne({ email });
         if (!admin) {
-            throw new Error();
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         const isMatch = await bcrypt.compare(password, admin.passwordHash);
         if (!isMatch) {
-            throw new Error();
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET as string);
-        res.json({ admin, token });
+        const token = generateToken(admin._id, 'admin', admin.societyId);
+        res.json({
+            admin: {
+                id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                societyId: admin.societyId
+            },
+            token
+        });
     } catch (err) {
-        res.status(401).json({ error: 'Invalid credentials' });
+        console.error('Admin login error:', err);
+        res.status(500).json({ error: 'Error during login' });
     }
 });
 
@@ -50,6 +84,17 @@ router.post('/login', async (req, res) => {
 router.post('/society', requireAdminAuth, async (req, res) => {
     try {
         const { name, location } = req.body;
+
+        if (!name || !location) {
+            return res.status(400).json({ error: 'Name and location are required' });
+        }
+
+        // Check if admin already has a society
+        const existingSociety = await Society.findOne({ createdByAdminId: req.user._id });
+        if (existingSociety) {
+            return res.status(400).json({ error: 'Admin already has a society' });
+        }
+
         const society = new Society({
             name,
             location,
@@ -57,9 +102,14 @@ router.post('/society', requireAdminAuth, async (req, res) => {
         });
 
         await society.save();
+
+        // Update admin with society ID
+        await Admin.findByIdAndUpdate(req.user._id, { societyId: society._id });
+
         res.status(201).json(society);
     } catch (err) {
-        res.status(400).json({ error: 'Error creating society' });
+        console.error('Society creation error:', err);
+        res.status(500).json({ error: 'Error creating society' });
     }
 });
 
@@ -67,9 +117,13 @@ router.post('/society', requireAdminAuth, async (req, res) => {
 router.get('/society', requireAdminAuth, async (req, res) => {
     try {
         const society = await Society.findOne({ createdByAdminId: req.user._id });
+        if (!society) {
+            return res.status(404).json({ error: 'Society not found' });
+        }
         res.json(society);
     } catch (err) {
-        res.status(400).json({ error: 'Error fetching society' });
+        console.error('Fetch society error:', err);
+        res.status(500).json({ error: 'Error fetching society' });
     }
 });
 
@@ -77,8 +131,23 @@ router.get('/society', requireAdminAuth, async (req, res) => {
 router.post('/tenants', requireAdminAuth, async (req, res) => {
     try {
         const { name, email, password, flatNumber } = req.body;
-        const passwordHash = await bcrypt.hash(password, 10);
 
+        if (!name || !email || !password || !flatNumber) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        // Ensure admin has a society
+        if (!req.user.societyId) {
+            return res.status(400).json({ error: 'Admin must create a society first' });
+        }
+
+        // Check if tenant email already exists
+        const existingTenant = await Tenant.findOne({ email });
+        if (existingTenant) {
+            return res.status(400).json({ error: 'Email already registered' });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
         const tenant = new Tenant({
             name,
             email,
@@ -88,19 +157,34 @@ router.post('/tenants', requireAdminAuth, async (req, res) => {
         });
 
         await tenant.save();
-        res.status(201).json(tenant);
+        res.status(201).json({
+            tenant: {
+                id: tenant._id,
+                name: tenant.name,
+                email: tenant.email,
+                flatNumber: tenant.flatNumber
+            }
+        });
     } catch (err) {
-        res.status(400).json({ error: 'Error creating tenant' });
+        console.error('Create tenant error:', err);
+        res.status(500).json({ error: 'Error creating tenant' });
     }
 });
 
 // List tenants (protected)
 router.get('/tenants', requireAdminAuth, async (req, res) => {
     try {
-        const tenants = await Tenant.find({ societyId: req.user.societyId });
+        if (!req.user.societyId) {
+            return res.status(400).json({ error: 'Admin must create a society first' });
+        }
+
+        const tenants = await Tenant.find({ societyId: req.user.societyId })
+            .select('-passwordHash')
+            .sort({ createdAt: -1 });
         res.json(tenants);
     } catch (err) {
-        res.status(400).json({ error: 'Error fetching tenants' });
+        console.error('Fetch tenants error:', err);
+        res.status(500).json({ error: 'Error fetching tenants' });
     }
 });
 

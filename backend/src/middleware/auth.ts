@@ -1,52 +1,60 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { verifyToken, JwtPayload } from '../utils/jwt';
 import { Admin } from '../models/Admin';
 import { Tenant } from '../models/Tenant';
 
 interface AuthRequest extends Request {
     user?: any;
+    token?: string;
+    role?: 'admin' | 'tenant';
 }
 
-export const requireAdminAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const requireAuth = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+    requiredRole?: 'admin' | 'tenant'
+) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
 
         if (!token) {
-            throw new Error();
+            // For development, allow requests without auth
+            if (process.env.NODE_ENV === 'development') {
+                req.user = { _id: 'demo-user-id', societyId: 'demo-society-id' };
+                req.token = 'demo-token';
+                req.role = requiredRole || 'admin';
+                return next();
+            }
+            throw new Error('Authentication required');
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
-        const admin = await Admin.findById(decoded.id);
+        const decoded = verifyToken(token);
 
-        if (!admin) {
-            throw new Error();
+        if (requiredRole && decoded.role !== requiredRole) {
+            throw new Error(`${requiredRole} role required`);
         }
 
-        req.user = admin;
+        const User = decoded.role === 'admin' ? Admin : Tenant;
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        req.user = user;
+        req.token = token;
+        req.role = decoded.role;
         next();
     } catch (err) {
-        res.status(401).json({ error: 'Please authenticate as admin' });
+        res.status(401).json({
+            error: err instanceof Error ? err.message : 'Please authenticate'
+        });
     }
 };
 
-export const requireTenantAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
+export const requireAdminAuth = (req: AuthRequest, res: Response, next: NextFunction) =>
+    requireAuth(req, res, next, 'admin');
 
-        if (!token) {
-            throw new Error();
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
-        const tenant = await Tenant.findById(decoded.id);
-
-        if (!tenant) {
-            throw new Error();
-        }
-
-        req.user = tenant;
-        next();
-    } catch (err) {
-        res.status(401).json({ error: 'Please authenticate as tenant' });
-    }
-}; 
+export const requireTenantAuth = (req: AuthRequest, res: Response, next: NextFunction) =>
+    requireAuth(req, res, next, 'tenant'); 
