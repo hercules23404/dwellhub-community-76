@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { WireframeAuthProvider } from "@/contexts/WireframeAuthContext";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { TenantLayout } from "@/layouts/TenantLayout";
+import { AdminProvider } from "@/contexts/AdminContext";
 
 // Landing & CTA
 function LandingPage() {
@@ -34,11 +35,31 @@ export default function App() {
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/signup" element={<AdminSignupPage />} />
           {/* Admin Dashboard/Pages (all protected by AdminLayout) */}
-          <Route element={<AdminLayout><AdminDashboardPage /></AdminLayout>} path="/admin/dashboard" />
-          <Route element={<AdminLayout><AdminSocietyPage /></AdminLayout>} path="/admin/society" />
-          <Route element={<AdminLayout><AdminTenantsPage /></AdminLayout>} path="/admin/tenants" />
-          <Route element={<AdminLayout><AdminNoticesPage /></AdminLayout>} path="/admin/notices" />
-          <Route element={<AdminLayout><AdminRequestsPage /></AdminLayout>} path="/admin/requests" />
+          <Route element={
+            <AdminProvider>
+              <AdminLayout><AdminDashboardPage /></AdminLayout>
+            </AdminProvider>
+          } path="/admin/dashboard" />
+          <Route element={
+            <AdminProvider>
+              <AdminLayout><AdminSocietyPage /></AdminLayout>
+            </AdminProvider>
+          } path="/admin/society" />
+          <Route element={
+            <AdminProvider>
+              <AdminLayout><AdminTenantsPage /></AdminLayout>
+            </AdminProvider>
+          } path="/admin/tenants" />
+          <Route element={
+            <AdminProvider>
+              <AdminLayout><AdminNoticesPage /></AdminLayout>
+            </AdminProvider>
+          } path="/admin/notices" />
+          <Route element={
+            <AdminProvider>
+              <AdminLayout><AdminRequestsPage /></AdminLayout>
+            </AdminProvider>
+          } path="/admin/requests" />
           {/* Fallback: */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
