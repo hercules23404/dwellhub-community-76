@@ -1,22 +1,13 @@
 
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Card, 
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle 
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, User, Loader2 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Remove all backend/auth related props and context
 interface LoginFormProps {
   onSwitchToSignup: () => void;
   userType: string;
@@ -27,32 +18,16 @@ export function LoginForm({ onSwitchToSignup, userType }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginType, setLoginType] = useState<"tenant" | "admin">(userType as "tenant" | "admin");
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // No longer doing any actual login, just wireframe/UI
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error("Please enter both email and password");
-      return;
-    }
-    
     setIsLoading(true);
-    
-    try {
-      await signIn({ email, password });
-      
-      // Auth context will handle redirection based on user role
-      // Admin -> '/admin/dashboard'
-      // Tenant -> '/home'
-    } catch (error: any) {
-      console.error("Login error:", error);
-      toast.error(error.message || "Invalid login credentials");
-    } finally {
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      // In a real app, would redirect based on role/type
+      // For wireframe, do nothing
+    }, 1000);
   };
 
   return (
@@ -67,7 +42,7 @@ export function LoginForm({ onSwitchToSignup, userType }: LoginFormProps) {
       </CardHeader>
       
       <Tabs 
-        defaultValue={userType} 
+        defaultValue={userType}
         className="w-full px-6" 
         onValueChange={(value) => setLoginType(value as "tenant" | "admin")}
       >
@@ -105,7 +80,9 @@ export function LoginForm({ onSwitchToSignup, userType }: LoginFormProps) {
               <button 
                 type="button" 
                 className="text-sm text-primary hover:underline"
-                onClick={() => toast.info("Password reset functionality will be available soon")}
+                // No backend, just disabled wireframe
+                onClick={() => {}}
+                disabled={isLoading}
               >
                 Forgot password?
               </button>
@@ -157,3 +134,4 @@ export function LoginForm({ onSwitchToSignup, userType }: LoginFormProps) {
     </Card>
   );
 }
+
