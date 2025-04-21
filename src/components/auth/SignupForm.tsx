@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,6 @@ import { Shield, User, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { SocietyFormData } from "@/components/admin/SocietySetupForm";
 
 // Define session storage keys
@@ -72,88 +70,14 @@ export function SignupForm({ onSwitchToLogin, userType, isPreSignup = false }: S
     setIsLoading(true);
     
     try {
-      // Sign up the user with Supabase Auth
-      await signUp({
-        email,
-        password,
-        firstName,
-        lastName,
-        phoneNumber,
-        tenantStatus: userType,
-      });
+      // For wireframe, just simulate sign up - don't pass arguments to signUp()
+      signUp();
 
-      // If this is part of the pre-signup flow, create the society
-      if (isPreSignup && societyData && userType === "admin") {
-        try {
-          // Get current user after signup
-          const { data: { session } } = await supabase.auth.getSession();
-          const userId = session?.user?.id;
-          
-          if (!userId) {
-            throw new Error("User ID not found after signup");
-          }
-
-          // Convert utility workers to string array format expected by the database
-          const utilityWorkersArray = societyData.utilityWorkers.map(worker => {
-            if (worker.contact) {
-              return `${worker.name} (${worker.contact})`;
-            }
-            return worker.name;
-          });
-
-          // Create the society in Supabase
-          const { data: societyData2, error: societyError } = await supabase
-            .from('societies')
-            .insert({
-              name: societyData.name,
-              address: societyData.address,
-              amenities: societyData.amenities,
-              utility_workers: utilityWorkersArray,
-              num_flats: societyData.numFlats,
-              created_by: userId
-            })
-            .select();
-          
-          if (societyError) {
-            throw societyError;
-          }
-          
-          if (!societyData2 || societyData2.length === 0) {
-            throw new Error("No society data returned after insertion");
-          }
-
-          // Update user profile with society ID
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .update({
-              society_id: societyData2[0].id
-            })
-            .eq('id', userId);
-          
-          if (profileError) {
-            throw profileError;
-          }
-
-          // Clear the form data from session storage
-          sessionStorage.removeItem(SOCIETY_FORM_DATA_KEY);
-          
-          toast.success("Society created successfully! Please log in.");
-          
-          // Redirect back to login instead of going directly to dashboard
-          navigate("/login");
-        } catch (error: any) {
-          console.error("Society creation error:", error);
-          toast.error("Failed to create society: " + (error.message || "Unknown error"));
-          
-          // Don't redirect - let user try again without losing data
-        }
-      } else {
-        // For regular tenant signup
-        toast.success("Account created successfully!");
-        
-        // Simply redirect to login page after signup
-        navigate("/login");
-      }
+      // Just simulate success for the wireframe
+      toast.success("Account created successfully!");
+      
+      // Simply redirect to login page after signup
+      navigate("/login");
     } catch (error: any) {
       console.error("Signup error:", error);
       toast.error(error.message || "Failed to create account");

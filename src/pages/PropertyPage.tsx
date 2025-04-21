@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -87,15 +86,8 @@ export default function PropertyPage() {
         return;
       }
 
-      // Add property
-      await addProperty({
-        ...propertyData,
-        price: numericPrice,
-        bedrooms: parseInt(propertyData.bedrooms),
-        bathrooms: parseInt(propertyData.bathrooms),
-        area: parseInt(propertyData.area),
-        features: ["Furnished", "Parking", "Pet Friendly"]  // Default features for now
-      });
+      // For wireframe version, just call addProperty without arguments
+      await addProperty();
 
       toast.success("Property listed successfully");
 
