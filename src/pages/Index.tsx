@@ -11,7 +11,8 @@ import {
   Bell, 
   ShieldCheck,
   Home,
-  Sparkles 
+  Sparkles,
+  LogIn
 } from 'lucide-react';
 
 export default function Index() {
@@ -59,30 +60,32 @@ export default function Index() {
               tenants, and administrators in one seamless experience.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            {/* Main Access Buttons - Login options */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Button asChild size="lg" className="group">
-                <Link to="/auth?type=tenant">
-                  Tenant Access
-                  <Home className="ml-2 h-4 w-4" />
+                <Link to="/admin/login">
+                  Admin Access
+                  <ShieldCheck className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
 
               <Button asChild size="lg" variant="secondary" className="group">
-                <Link to="/auth?type=admin">
-                  Admin Access
-                  <ShieldCheck className="ml-2 h-4 w-4" />
+                <Link to="/tenant/login">
+                  Tenant Access
+                  <Home className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
 
             {/* Demo buttons - clearly visible with prominence */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
               <Button
                 size="lg"
                 variant="outline"
                 className="bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary font-semibold"
                 onClick={() => navigate('/admin/dashboard')}
               >
+                <LogIn className="mr-2 h-4 w-4" />
                 Demo as Admin
               </Button>
               <Button
@@ -91,6 +94,7 @@ export default function Index() {
                 className="bg-secondary/10 hover:bg-secondary/20 border-secondary/30 text-secondary font-semibold"
                 onClick={() => navigate('/tenant/dashboard')}
               >
+                <LogIn className="mr-2 h-4 w-4" />
                 Demo as Tenant
               </Button>
             </div>
@@ -149,13 +153,13 @@ export default function Index() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="group">
-                <Link to="/auth?type=tenant">
+                <Link to="/tenant/login">
                   <Home className="mr-2 h-4 w-4" />
                   Join as Tenant
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="group">
-                <Link to="/auth?type=admin">
+                <Link to="/admin/login">
                   <ShieldCheck className="mr-2 h-4 w-4" />
                   Register Your Society
                 </Link>
