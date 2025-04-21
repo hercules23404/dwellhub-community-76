@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import { WireframeAuthProvider } from "@/contexts/WireframeAuthContext";
 import { AdminLayout } from "@/layouts/AdminLayout";
@@ -109,6 +110,15 @@ import TenantDashboardPage from "@/pages/tenant/DashboardPage";
 import TenantNoticesPage from "@/pages/tenant/NoticesPage";
 import TenantRequestsPage from "@/pages/tenant/RequestsPage";
 import TenantLeasePage from "@/pages/tenant/LeasePage";
+
+// Import admin pages
+import AdminLoginPage from "@/pages/admin/LoginPage";
+import AdminSignupPage from "@/pages/admin/SignupPage";
+import AdminDashboardPage from "@/pages/admin/DashboardPage";
+import AdminSocietyPage from "@/pages/admin/SocietyPage";
+import AdminTenantsPage from "@/pages/admin/TenantsPage";
+import AdminNoticesPage from "@/pages/admin/NoticesPage";
+import AdminRequestsPage from "@/pages/admin/RequestsPage";
 
 export default function App() {
   return (
