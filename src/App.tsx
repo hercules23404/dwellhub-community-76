@@ -117,7 +117,8 @@ import AdminSignupPage from "@/pages/admin/SignupPage";
 import AdminDashboardPage from "@/pages/admin/DashboardPage";
 import AdminSocietyPage from "@/pages/admin/SocietyPage";
 import AdminTenantsPage from "@/pages/admin/TenantsPage";
-import AdminNoticesPage from "@/pages/admin/NoticesPage";
+// 👇 Correct import for Admin Notices Page
+import AdminNoticesPage from "@/pages/admin/AdminNoticesPage";
 import AdminRequestsPage from "@/pages/admin/RequestsPage";
 
 export default function App() {
