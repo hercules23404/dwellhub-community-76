@@ -6,6 +6,9 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 
+import { AdminDashboardCards } from "@/components/admin/AdminDashboardCards";
+import { AdminRentChart } from "@/components/admin/AdminRentChart";
+
 export default function AdminDashboardPage() {
   // For this step, just show the hardcoded society name
   const societyName = "Malabar Heights"; // hardcoded for now
@@ -44,7 +47,8 @@ export default function AdminDashboardPage() {
         <div className="flex-1 pt-20 pb-16 px-4 lg:pl-8 max-w-screen-2xl mx-auto">
           <div className="space-y-8 p-6">
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <AdminOverview />
+            <AdminDashboardCards />
+            <AdminRentChart />
           </div>
         </div>
       </div>
