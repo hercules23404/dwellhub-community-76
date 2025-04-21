@@ -1,60 +1,56 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, JwtPayload } from '../utils/jwt';
-import { Admin } from '../models/Admin';
-import { Tenant } from '../models/Tenant';
+import jwt from 'jsonwebtoken';
+import { User } from '../models/User';
 
 interface AuthRequest extends Request {
-    user?: any;
-    token?: string;
-    role?: 'admin' | 'tenant';
+    user?: {
+        id: string;
+        role: string;
+        societyId?: string;
+    } | null;
 }
 
-export const requireAuth = async (
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction,
-    requiredRole?: 'admin' | 'tenant'
-) => {
+export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
 
         if (!token) {
-            // For development, allow requests without auth
-            if (process.env.NODE_ENV === 'development') {
-                req.user = { _id: 'demo-user-id', societyId: 'demo-society-id' };
-                req.token = 'demo-token';
-                req.role = requiredRole || 'admin';
-                return next();
-            }
-            throw new Error('Authentication required');
+            return res.status(401).json({ message: 'No token, authorization denied' });
         }
 
-        const decoded = verifyToken(token);
-
-        if (requiredRole && decoded.role !== requiredRole) {
-            throw new Error(`${requiredRole} role required`);
-        }
-
-        const User = decoded.role === 'admin' ? Admin : Tenant;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
         const user = await User.findById(decoded.id);
 
         if (!user) {
-            throw new Error('User not found');
+            return res.status(401).json({ message: 'User not found' });
         }
 
-        req.user = user;
-        req.token = token;
-        req.role = decoded.role;
+        req.user = {
+            id: user._id.toString(),
+            role: user.role,
+            societyId: user.societyId
+        };
+
         next();
-    } catch (err) {
-        res.status(401).json({
-            error: err instanceof Error ? err.message : 'Please authenticate'
-        });
+    } catch (error) {
+        res.status(401).json({ message: 'Token is not valid' });
     }
 };
 
-export const requireAdminAuth = (req: AuthRequest, res: Response, next: NextFunction) =>
-    requireAuth(req, res, next, 'admin');
+export const requireAdminAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    await requireAuth(req, res, () => {
+        if (req.user?.role !== 'admin') {
+            return res.status(403).json({ message: 'Admin access required' });
+        }
+        next();
+    });
+};
 
-export const requireTenantAuth = (req: AuthRequest, res: Response, next: NextFunction) =>
-    requireAuth(req, res, next, 'tenant'); 
+export const requireTenantAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    await requireAuth(req, res, () => {
+        if (req.user?.role !== 'tenant') {
+            return res.status(403).json({ message: 'Tenant access required' });
+        }
+        next();
+    });
+}; 
