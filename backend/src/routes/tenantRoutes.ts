@@ -1,13 +1,14 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
+import bcryptjs from 'bcryptjs';
 import { Tenant } from '../models/Tenant';
 import { requireTenantAuth } from '../middleware/auth';
-import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/jwt';
 
 const router = express.Router();
 
 // Tenant login
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password } = req.body;
 
@@ -20,7 +21,7 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const isMatch = await bcrypt.compare(password, tenant.passwordHash);
+        const isMatch = await bcryptjs.compare(password, tenant.passwordHash);
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -37,13 +38,12 @@ router.post('/login', async (req, res) => {
             token
         });
     } catch (err) {
-        console.error('Tenant login error:', err);
-        res.status(500).json({ error: 'Error during login' });
+        next(err);
     }
 });
 
 // Get tenant profile (protected)
-router.get('/profile', requireTenantAuth, async (req, res) => {
+router.get('/profile', requireTenantAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const tenant = await Tenant.findById(req.user._id)
             .select('-passwordHash')
@@ -55,8 +55,7 @@ router.get('/profile', requireTenantAuth, async (req, res) => {
 
         res.json(tenant);
     } catch (err) {
-        console.error('Fetch tenant profile error:', err);
-        res.status(500).json({ error: 'Error fetching profile' });
+        next(err);
     }
 });
 

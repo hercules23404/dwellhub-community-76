@@ -1,16 +1,17 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import bcryptjs from 'bcryptjs';
+import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import { Admin } from '../models/Admin';
 import { Society } from '../models/Society';
 import { Tenant } from '../models/Tenant';
 import { requireAdminAuth } from '../middleware/auth';
-import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/jwt';
-import mongoose from 'mongoose';
-import { RouteHandler, AuthenticatedRouteHandler } from '../types/route';
+import { RouteHandler, AuthenticatedRouteHandler, AuthenticatedRequest } from '../types/route';
 
 const router = express.Router();
 
-const signup: RouteHandler = async (req, res) => {
+const signup: RouteHandler = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password, name } = req.body;
 
@@ -19,8 +20,8 @@ const signup: RouteHandler = async (req, res) => {
             return res.status(400).json({ message: 'Email already registered' });
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const salt = await bcryptjs.genSalt(10);
+        const hashedPassword = await bcryptjs.hash(password, salt);
 
         const admin = new Admin({
             email,
@@ -43,11 +44,11 @@ const signup: RouteHandler = async (req, res) => {
             token
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        next(error);
     }
 };
 
-const login: RouteHandler = async (req, res) => {
+const login: RouteHandler = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password } = req.body;
 
@@ -56,7 +57,7 @@ const login: RouteHandler = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        const isMatch = await bcrypt.compare(password, admin.password);
+        const isMatch = await bcryptjs.compare(password, admin.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
@@ -74,11 +75,11 @@ const login: RouteHandler = async (req, res) => {
             token
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        next(error);
     }
 };
 
-const createSociety: AuthenticatedRouteHandler = async (req, res) => {
+const createSociety: AuthenticatedRouteHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const { name, address, totalUnits } = req.body;
 
@@ -99,11 +100,11 @@ const createSociety: AuthenticatedRouteHandler = async (req, res) => {
 
         res.status(201).json(society);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        next(error);
     }
 };
 
-const getSociety: AuthenticatedRouteHandler = async (req, res) => {
+const getSociety: AuthenticatedRouteHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const society = await Society.findOne({ createdByAdminId: req.user.id });
         if (!society) {
@@ -111,11 +112,11 @@ const getSociety: AuthenticatedRouteHandler = async (req, res) => {
         }
         res.json(society);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        next(error);
     }
 };
 
-const createTenant: AuthenticatedRouteHandler = async (req, res) => {
+const createTenant: AuthenticatedRouteHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const { email, password, name, unit } = req.body;
 
@@ -128,8 +129,8 @@ const createTenant: AuthenticatedRouteHandler = async (req, res) => {
             return res.status(400).json({ message: 'Email already registered' });
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const salt = await bcryptjs.genSalt(10);
+        const hashedPassword = await bcryptjs.hash(password, salt);
 
         const tenant = new Tenant({
             email,
@@ -152,11 +153,11 @@ const createTenant: AuthenticatedRouteHandler = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        next(error);
     }
 };
 
-const getTenants: AuthenticatedRouteHandler = async (req, res) => {
+const getTenants: AuthenticatedRouteHandler = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         if (!req.user.societyId) {
             return res.status(400).json({ message: 'Admin must create a society first' });
@@ -167,7 +168,7 @@ const getTenants: AuthenticatedRouteHandler = async (req, res) => {
 
         res.json(tenants);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        next(error);
     }
 };
 

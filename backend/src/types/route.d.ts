@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 
 export interface AuthenticatedRequest extends Request {
@@ -9,14 +9,6 @@ export interface AuthenticatedRequest extends Request {
     };
 }
 
-export type RouteHandler = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => Promise<any>;
+export type RouteHandler = RequestHandler;
 
-export type AuthenticatedRouteHandler = (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-) => Promise<any>; 
+export type AuthenticatedRouteHandler = RequestHandler<{}, any, any, any, { user: AuthenticatedRequest['user'] }>; 

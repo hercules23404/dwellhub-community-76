@@ -4,7 +4,7 @@ export interface ITenant extends Document {
     email: string;
     password: string;
     name: string;
-    role: 'tenant';
+    role: string;
     unit: string;
     societyId: mongoose.Types.ObjectId;
     createdAt: Date;
@@ -16,35 +16,30 @@ const tenantSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        trim: true,
-        lowercase: true
     },
     password: {
         type: String,
-        required: true
+        required: true,
     },
     name: {
         type: String,
         required: true,
-        trim: true
     },
     role: {
         type: String,
         default: 'tenant',
-        immutable: true
     },
     unit: {
         type: String,
         required: true,
-        trim: true
     },
     societyId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Society',
-        required: true
-    }
+        required: true,
+    },
 }, {
-    timestamps: true
+    timestamps: true,
 });
 
 export const Tenant = mongoose.model<ITenant>('Tenant', tenantSchema); 

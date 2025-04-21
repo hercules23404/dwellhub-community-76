@@ -1,11 +1,12 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import { Notice } from '../models/Notice';
 import { requireAdminAuth, requireTenantAuth } from '../middleware/auth';
 
 const router = express.Router();
 
 // Create notice (admin only)
-router.post('/', requireAdminAuth, async (req, res) => {
+router.post('/', requireAdminAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { title, description, targetRole } = req.body;
 
@@ -32,13 +33,12 @@ router.post('/', requireAdminAuth, async (req, res) => {
         await notice.save();
         res.status(201).json(notice);
     } catch (err) {
-        console.error('Create notice error:', err);
-        res.status(500).json({ error: 'Error creating notice' });
+        next(err);
     }
 });
 
 // Get notices for admin
-router.get('/admin', requireAdminAuth, async (req, res) => {
+router.get('/admin', requireAdminAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.user.societyId) {
             return res.status(400).json({ error: 'Admin must be associated with a society' });
@@ -53,13 +53,12 @@ router.get('/admin', requireAdminAuth, async (req, res) => {
 
         res.json(notices);
     } catch (err) {
-        console.error('Fetch admin notices error:', err);
-        res.status(500).json({ error: 'Error fetching notices' });
+        next(err);
     }
 });
 
 // Get notices for tenant
-router.get('/tenant', requireTenantAuth, async (req, res) => {
+router.get('/tenant', requireTenantAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.user.societyId) {
             return res.status(400).json({ error: 'Tenant must be associated with a society' });
@@ -74,8 +73,7 @@ router.get('/tenant', requireTenantAuth, async (req, res) => {
 
         res.json(notices);
     } catch (err) {
-        console.error('Fetch tenant notices error:', err);
-        res.status(500).json({ error: 'Error fetching notices' });
+        next(err);
     }
 });
 

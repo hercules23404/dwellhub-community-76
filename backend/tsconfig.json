@@ -1,7 +1,10 @@
 {
     "compilerOptions": {
-        "target": "es2016",
+        "target": "es2017",
         "module": "commonjs",
+        "lib": [
+            "esnext"
+        ],
         "outDir": "./dist",
         "rootDir": "./src",
         "strict": true,
@@ -10,23 +13,13 @@
         "forceConsistentCasingInFileNames": true,
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "baseUrl": ".",
-        "paths": {
-            "@/*": [
-                "src/*"
-            ]
-        },
-        "lib": [
-            "es2016",
-            "dom"
-        ],
-        "typeRoots": [
-            "./node_modules/@types",
-            "./src/types"
+        "types": [
+            "node",
+            "express"
         ]
     },
     "include": [
-        "src/**/*"
+        "src"
     ],
     "exclude": [
         "node_modules",

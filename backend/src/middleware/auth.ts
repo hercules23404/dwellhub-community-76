@@ -1,16 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { User } from '../models/User';
+import { AuthenticatedRequest } from '../types/route';
 
-interface AuthRequest extends Request {
-    user?: {
-        id: string;
-        role: string;
-        societyId?: string;
-    } | null;
-}
-
-export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -25,7 +19,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
             return res.status(401).json({ message: 'User not found' });
         }
 
-        req.user = {
+        (req as AuthenticatedRequest).user = {
             id: user._id.toString(),
             role: user.role,
             societyId: user.societyId
@@ -37,18 +31,18 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
     }
 };
 
-export const requireAdminAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const requireAdminAuth = async (req: Request, res: Response, next: NextFunction) => {
     await requireAuth(req, res, () => {
-        if (req.user?.role !== 'admin') {
+        if ((req as AuthenticatedRequest).user?.role !== 'admin') {
             return res.status(403).json({ message: 'Admin access required' });
         }
         next();
     });
 };
 
-export const requireTenantAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const requireTenantAuth = async (req: Request, res: Response, next: NextFunction) => {
     await requireAuth(req, res, () => {
-        if (req.user?.role !== 'tenant') {
+        if ((req as AuthenticatedRequest).user?.role !== 'tenant') {
             return res.status(403).json({ message: 'Tenant access required' });
         }
         next();

@@ -1,7 +1,8 @@
-import express from 'express';
-import dotenv from 'dotenv';
+import express, { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
-import connectDB from './config/db';
+import dotenv from 'dotenv';
+import { connectDB } from './config/db';
 import adminRoutes from './routes/adminRoutes';
 import tenantRoutes from './routes/tenantRoutes';
 import noticeRoutes from './routes/noticeRoutes';
