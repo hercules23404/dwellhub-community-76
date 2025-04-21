@@ -33,6 +33,8 @@ export default function AdminPropertiesPage() {
     available: true,
   });
 
+  // REMOVED ANY LOGIN GUARD - page now always accessible
+
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value, type: inputType, checked } = e.target;
     setForm((f) => ({

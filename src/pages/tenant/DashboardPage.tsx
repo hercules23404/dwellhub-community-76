@@ -2,7 +2,8 @@
 import { useNavigate } from "react-router-dom";
 
 export default function TenantDashboardPage() {
-  const navigate = useNavigate();
+  // REMOVED LOGIN GUARDS FOR DEVELOPMENT DEMO ACCESS
+  // const navigate = useNavigate();
 
   return (
     <div className="max-w-2xl mx-auto p-4 animate-fade-in">
@@ -23,13 +24,13 @@ export default function TenantDashboardPage() {
       <div className="flex gap-4 flex-col sm:flex-row">
         <button
           className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold rounded-lg py-3 px-4 shadow hover:from-purple-600 hover:to-indigo-600 transition"
-          onClick={() => navigate("/tenant/requests")}
+          onClick={() => window.location.href = "/tenant/requests"}
         >
           🛠️ Submit Service Request
         </button>
         <button
           className="flex-1 bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-semibold rounded-lg py-3 px-4 shadow hover:from-indigo-500 hover:to-purple-500 transition"
-          onClick={() => navigate("/tenant/lease")}
+          onClick={() => window.location.href = "/tenant/lease"}
         >
           📄 View Lease Info
         </button>

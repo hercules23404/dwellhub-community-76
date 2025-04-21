@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +18,6 @@ export default function Index() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If user is already logged in, redirect them to the appropriate page
     if (user && !loading) {
       if (isAdmin) {
         navigate('/admin/dashboard');
@@ -29,17 +27,11 @@ export default function Index() {
     }
   }, [user, loading, isAdmin, navigate]);
 
-  // If loading auth state, return nothing
   if (loading) return null;
-
-  // If user is logged in, we'll be redirected by the useEffect above
-  // Only show landing page for non-authenticated users
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
       <section className="relative py-20 md:py-32 overflow-hidden">
-        {/* Background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-40 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl"></div>
           <div className="absolute -bottom-10 -right-1/4 w-1/2 h-1/2 bg-accent/5 rounded-full blur-3xl"></div>
@@ -81,11 +73,27 @@ export default function Index() {
                 </Link>
               </Button>
             </div>
+
+            <div className="flex gap-4 mt-8">
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => navigate('/admin/dashboard')}
+              >
+                Demo as Admin
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => navigate('/tenant/dashboard')}
+              >
+                Demo as Tenant
+              </Button>
+            </div>
           </div>
         </Container>
       </section>
 
-      {/* Features Section */}
       <section className="py-20 bg-muted/40">
         <Container maxWidth="xl">
           <h2 className="text-3xl font-bold text-center mb-16">Key Features</h2>
@@ -127,7 +135,6 @@ export default function Index() {
         </Container>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20">
         <Container maxWidth="lg">
           <div className="bg-primary-foreground p-8 md:p-12 rounded-xl border shadow-sm text-center">
@@ -154,7 +161,6 @@ export default function Index() {
         </Container>
       </section>
 
-      {/* Footer */}
       <footer className="bg-muted/30 py-8 border-t">
         <Container maxWidth="xl">
           <div className="flex flex-col md:flex-row justify-between items-center">

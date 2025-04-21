@@ -9,32 +9,28 @@ import { AdminDashboardCards } from "@/components/admin/AdminDashboardCards";
 import { AdminRentChart } from "@/components/admin/AdminRentChart";
 
 export default function AdminDashboardPage() {
-  const { user, isAdmin } = useAuth();
-  const navigate = useNavigate();
+  // REMOVED LOGIN GUARDS FOR DEVELOPMENT DEMO ACCESS
+  // const { user, isAdmin } = useAuth();
+  // const navigate = useNavigate();
 
-  useEffect(() => {
-    // First check if user is logged in
-    if (!user) {
-      toast.error("You must be logged in to access the admin area");
-      navigate("/auth?redirect=/admin/dashboard");
-      return;
-    }
-    
-    // Then check if user is admin
-    if (!isAdmin) {
-      toast.error("You don't have access to the admin area");
-      navigate("/home");
-      return;
-    }
-
-    // Welcome toast for admins
-    toast.success("Welcome to the admin dashboard", {
-      description: "You can manage properties, tenants, services and notices here",
-    });
-  }, [user, isAdmin, navigate]);
+  // useEffect(() => {
+  //   if (!user) {
+  //     toast.error("You must be logged in to access the admin area");
+  //     navigate("/auth?redirect=/admin/dashboard");
+  //     return;
+  //   }
+  //   if (!isAdmin) {
+  //     toast.error("You don't have access to the admin area");
+  //     navigate("/home");
+  //     return;
+  //   }
+  //   toast.success("Welcome to the admin dashboard", {
+  //     description: "You can manage properties, tenants, services and notices here",
+  //   });
+  // }, [user, isAdmin, navigate]);
 
   // Don't render anything if not authorized
-  if (!user || !isAdmin) return null;
+  // if (!user || !isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background">
