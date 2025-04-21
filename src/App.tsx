@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import { WireframeAuthProvider } from "@/contexts/WireframeAuthContext";
 import { AdminLayout } from "@/layouts/AdminLayout";
@@ -23,34 +22,20 @@ function LandingPage() {
         A comprehensive platform for modern property management.
       </p>
 
-      {/* CTA Buttons */}
-      <div className="flex gap-10 z-10 mb-12 flex-col md:flex-row items-center">
-        {/* Tenant Login */}
-        <Link
-          to="/tenant/login"
-          className="px-10 py-5 rounded-lg text-white text-xl font-semibold shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 flex items-center"
+      {/* Navigation Buttons */}
+      <div className="flex gap-8 z-10 mb-12 flex-col md:flex-row items-center w-full max-w-xl">
+        <a
+          href="/tenant/login"
+          className="w-full px-10 py-5 mb-2 md:mb-0 rounded-lg text-white text-xl font-semibold shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 flex items-center justify-center"
         >
-          <Home className="mr-2 h-6 w-6" />
           Login as Tenant
-        </Link>
-
-        {/* Admin Login & Signup */}
-        <div className="flex flex-col gap-4">
-          <Link
-            to="/admin/login"
-            className="px-10 py-4 rounded-lg text-white text-lg font-semibold shadow-md hover:shadow-lg transition transform hover:-translate-y-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 flex items-center"
-          >
-            <ShieldCheck className="mr-2 h-5 w-5" />
-            Admin Login
-          </Link>
-          <Link
-            to="/admin/signup"
-            className="px-10 py-4 rounded-lg text-white text-lg font-semibold shadow-md hover:shadow-lg transition transform hover:-translate-y-1 bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 flex items-center"
-          >
-            <ShieldCheck className="mr-2 h-5 w-5" />
-            Admin Signup
-          </Link>
-        </div>
+        </a>
+        <a
+          href="/admin/login"
+          className="w-full px-10 py-5 rounded-lg text-white text-xl font-semibold shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 flex items-center justify-center"
+        >
+          Login / Signup as Admin
+        </a>
       </div>
 
       {/* Feature List */}
@@ -188,4 +173,3 @@ import AdminSocietyPage from "@/pages/admin/SocietyPage";
 import AdminTenantsPage from "@/pages/admin/TenantsPage";
 import AdminNoticesPage from "@/pages/admin/NoticesPage";
 import AdminRequestsPage from "@/pages/admin/RequestsPage";
-
