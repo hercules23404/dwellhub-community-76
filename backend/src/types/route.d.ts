@@ -1,14 +1,22 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 
-export interface AuthenticatedRequest extends Request {
-    user: JwtPayload & {
-        id: string;
-        role: string;
-        societyId?: string;
-    };
+export interface UserPayload extends JwtPayload {
+    id: string;
+    role: 'admin' | 'tenant';
+    societyId?: string;
 }
 
-export type RouteHandler = RequestHandler;
+// Basic route handler type
+export type RouteHandler = (req: Request, res: Response, next: NextFunction) => void | Promise<void>;
 
-export type AuthenticatedRouteHandler = RequestHandler<{}, any, any, any, { user: AuthenticatedRequest['user'] }>; 
+// Authenticated request type that ensures user exists
+export interface AuthenticatedRequest extends Request {
+    user: UserPayload;
+}
+
+// Authenticated route handler type
+export type AuthenticatedRouteHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => void | Promise<void>;
+
+// Middleware type for authentication
+export type AuthMiddleware = (req: Request, res: Response, next: NextFunction) => void | Promise<void>; 

@@ -1,80 +1,50 @@
-import express, { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
+import express from 'express';
 import { Notice } from '../models/Notice';
 import { requireAdminAuth, requireTenantAuth } from '../middleware/auth';
+import { AuthenticatedRequest } from '../types/express';
+import { Response } from 'express';
 
 const router = express.Router();
 
-// Create notice (admin only)
-router.post('/', requireAdminAuth, async (req: Request, res: Response, next: NextFunction) => {
+// Create a new notice
+const createNotice = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { title, description, targetRole } = req.body;
-
-        if (!title || !description || !targetRole) {
-            return res.status(400).json({ error: 'All fields are required' });
-        }
-
-        if (!['admin', 'tenant'].includes(targetRole)) {
-            return res.status(400).json({ error: 'Invalid target role' });
-        }
-
-        if (!req.user.societyId) {
-            return res.status(400).json({ error: 'Admin must be associated with a society' });
-        }
-
+        const { title, content, priority } = req.body;
         const notice = new Notice({
             title,
-            description,
-            postedBy: req.user._id,
-            targetRole,
+            content,
+            priority,
             societyId: req.user.societyId
         });
-
         await notice.save();
         res.status(201).json(notice);
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating notice' });
     }
-});
+};
 
-// Get notices for admin
-router.get('/admin', requireAdminAuth, async (req: Request, res: Response, next: NextFunction) => {
+// Get all notices for admin
+const getAdminNotices = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        if (!req.user.societyId) {
-            return res.status(400).json({ error: 'Admin must be associated with a society' });
-        }
-
-        const notices = await Notice.find({
-            societyId: req.user.societyId,
-            targetRole: 'admin'
-        })
-            .sort({ createdAt: -1 })
-            .populate('postedBy', 'name email');
-
+        const notices = await Notice.find({ societyId: req.user.societyId });
         res.json(notices);
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching notices' });
     }
-});
+};
 
-// Get notices for tenant
-router.get('/tenant', requireTenantAuth, async (req: Request, res: Response, next: NextFunction) => {
+// Get all notices for tenant
+const getTenantNotices = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        if (!req.user.societyId) {
-            return res.status(400).json({ error: 'Tenant must be associated with a society' });
-        }
-
-        const notices = await Notice.find({
-            societyId: req.user.societyId,
-            targetRole: 'tenant'
-        })
-            .sort({ createdAt: -1 })
-            .populate('postedBy', 'name');
-
+        const notices = await Notice.find({ societyId: req.user.societyId });
         res.json(notices);
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching notices' });
     }
-});
+};
+
+router.post('/', requireAdminAuth, createNotice);
+router.get('/admin', requireAdminAuth, getAdminNotices);
+router.get('/tenant', requireTenantAuth, getTenantNotices);
 
 export default router; 
